@@ -7,9 +7,13 @@ const chatRoutes = require('./chatRoutes');
 const socialRoutes = require('./socialRoutes');
 const userRoutes = require('./userRoutes');
 const adminRoutes = require('./adminRoutes');
+const postRoutes = require('./postRoutes');
+const uploadRoutes = require('./uploadRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/spots', spotRoutes);
+router.use('/posts', postRoutes);
+router.use('/upload', uploadRoutes);
 router.use('/itineraries', itineraryRoutes);
 router.use('/chat', chatRoutes);
 router.use('/social', socialRoutes);

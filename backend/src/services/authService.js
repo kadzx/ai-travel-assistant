@@ -36,8 +36,13 @@ class AuthService {
     };
   }
 
-  async login(email, password) {
-    const user = await User.findOne({ where: { email } });
+  async login(identifier, password) {
+    const { Op } = require('sequelize');
+    const user = await User.findOne({ 
+      where: { 
+        [Op.or]: [{ email: identifier }, { username: identifier }]
+      } 
+    });
     if (!user) throw new Error('user_not_found');
 
     const isMatch = await user.validatePassword(password);

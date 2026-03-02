@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { request } from '@/utils/request';
+import http from '@/utils/request';
 
 export interface UserInfo {
   id: number;
@@ -11,30 +11,24 @@ export interface UserInfo {
 }
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref<string>(uni.getStorageSync('token') || '');
-  const userInfo = ref<UserInfo | null>(uni.getStorageSync('userInfo') || null);
+  const token = ref<string>('');
+  const userInfo = ref<UserInfo | null>(null);
 
   const setUserInfo = (user: UserInfo) => {
     userInfo.value = user;
-    uni.setStorageSync('userInfo', user);
   };
 
   const setToken = (newToken: string) => {
     token.value = newToken;
-    uni.setStorageSync('token', newToken);
   };
 
   const login = async (data: any) => {
     try {
-      const res: any = await request({
-        url: '/auth/login',
-        method: 'POST',
-        data
-      });
+      const res: any = await http.post('/auth/login', data);
       
-      if (res.data && res.data.token) {
-        setToken(res.data.token);
-        setUserInfo(res.data.user);
+      if (res && res.token) {
+        setToken(res.token);
+        setUserInfo(res.user);
         return res;
       } else {
         throw new Error('Login failed: No token received');
@@ -47,11 +41,7 @@ export const useUserStore = defineStore('user', () => {
 
   const register = async (data: any) => {
     try {
-      return await request({
-        url: '/auth/register',
-        method: 'POST',
-        data
-      });
+      return await http.post('/auth/register', data);
     } catch (error) {
       console.error('Register error:', error);
       throw error;
@@ -61,18 +51,16 @@ export const useUserStore = defineStore('user', () => {
   const logout = () => {
     token.value = '';
     userInfo.value = null;
-    uni.removeStorageSync('token');
-    uni.removeStorageSync('userInfo');
     uni.reLaunch({ url: '/pages/login/login' });
   };
 
   const checkLogin = () => {
-      if (!token.value) {
-          uni.redirectTo({ url: '/pages/login/login' });
-          return false;
-      }
-      return true;
-  }
+    if (!token.value) {
+      uni.redirectTo({ url: '/pages/login/login' });
+      return false;
+    }
+    return true;
+  };
 
   return { 
     token, 
@@ -84,4 +72,6 @@ export const useUserStore = defineStore('user', () => {
     setUserInfo,
     setToken
   };
+}, {
+  persist: true
 });

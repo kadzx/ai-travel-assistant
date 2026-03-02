@@ -10,9 +10,10 @@ const registerSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
+  username: Joi.string(), // Allow username
+  email: Joi.string().email(), // Allow email
   password: Joi.string().required()
-});
+}).xor('username', 'email'); // Require at least one of them
 
 exports.register = asyncHandler(async (req, res) => {
   const { error, value } = registerSchema.validate(req.body);
@@ -35,7 +36,9 @@ exports.login = asyncHandler(async (req, res) => {
   if (error) return ResponseUtil.fail(res, 'param_error', error.details[0].message);
 
   try {
-    const data = await authService.login(value.email, value.password);
+    // Pass username or email
+    const identifier = value.email || value.username;
+    const data = await authService.login(identifier, value.password);
     ResponseUtil.success(res, data);
   } catch (err) {
     if (['user_not_found', 'password_error'].includes(err.message)) {

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { request } from '@/utils/request';
+import http from '@/utils/request';
 
 export interface ItineraryItem {
   id: number | string;
@@ -21,11 +21,8 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const getList = async () => {
     loading.value = true;
     try {
-      const res: any = await request({ 
-        url: '/itinerary/list', 
-        method: 'GET' 
-      });
-      list.value = res.data || [];
+      const res: any = await http.get('/itinerary/list');
+      list.value = res || [];
       return list.value;
     } catch (error) {
       console.error('Fetch itinerary list error:', error);
@@ -38,18 +35,14 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const generate = async (data: any) => {
     loading.value = true;
     try {
-      const res: any = await request({ 
-        url: '/itinerary/generate', 
-        method: 'POST', 
-        data 
-      });
+      const res: any = await http.post('/itinerary/generate', data);
       
-      if (res.data) {
-        currentItinerary.value = res.data;
+      if (res) {
+        currentItinerary.value = res;
         // Optionally prepend to list if it returns the full object
-        list.value.unshift(res.data);
+        list.value.unshift(res);
       }
-      return res.data;
+      return res;
     } catch (error) {
       console.error('Generate itinerary error:', error);
       throw error;
@@ -61,12 +54,9 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const getDetail = async (id: string | number) => {
     loading.value = true;
     try {
-      const res: any = await request({ 
-        url: `/itinerary/${id}`, 
-        method: 'GET' 
-      });
-      currentItinerary.value = res.data;
-      return res.data;
+      const res: any = await http.get(`/itinerary/${id}`);
+      currentItinerary.value = res;
+      return res;
     } catch (error) {
       console.error('Fetch itinerary detail error:', error);
       throw error;

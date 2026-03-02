@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { request } from '@/utils/request';
+import http from '@/utils/request';
 
 export interface Message {
   id?: number | string;
@@ -17,11 +17,11 @@ export const useChatStore = defineStore('chat', () => {
 
   const startSession = async () => {
     try {
-      const res: any = await request({ url: '/chat/session', method: 'POST' });
-      if (res.data && res.data.sessionId) {
-        sessionId.value = res.data.sessionId;
+      const res: any = await http.post('/chat/session');
+      if (res && res.sessionId) {
+        sessionId.value = res.sessionId;
       }
-      return res.data;
+      return res;
     } catch (error) {
       console.error('Start chat session error:', error);
       throw error;
@@ -42,19 +42,15 @@ export const useChatStore = defineStore('chat', () => {
     loading.value = true;
 
     try {
-      const res: any = await request({ 
-        url: '/chat/send', 
-        method: 'POST', 
-        data: { 
-          content, 
-          sessionId: sessionId.value 
-        } 
+      const res: any = await http.post('/chat/message', { 
+        content, 
+        sessionId: sessionId.value 
       });
       
-      if (res.data && res.data.reply) {
+      if (res && res.content) {
         const assistantMsg: Message = {
           role: 'assistant',
-          content: res.data.reply,
+          content: res.content,
           timestamp: Date.now(),
           id: Date.now() + 1
         };
@@ -75,9 +71,9 @@ export const useChatStore = defineStore('chat', () => {
   const loadHistory = async () => {
     loading.value = true;
     try {
-      const res: any = await request({ url: '/chat/history', method: 'GET' });
-      if (res.data) {
-        messages.value = res.data;
+      const res: any = await http.get(`/chat/history/${sessionId.value}`);
+      if (res) {
+        messages.value = res;
       }
     } catch (error) {
       console.error('Load chat history error:', error);
