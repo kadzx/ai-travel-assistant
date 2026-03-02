@@ -4,6 +4,10 @@ const ScenicSpot = require('./ScenicSpot');
 const Itinerary = require('./Itinerary');
 const ChatMessage = require('./ChatMessage');
 const Post = require('./Post');
+const Comment = require('./Comment');
+const Like = require('./Like');
+const Favorite = require('./Favorite');
+const FavoriteFolder = require('./FavoriteFolder');
 
 // 定义关联关系 / Define Associations
 
@@ -19,6 +23,68 @@ ChatMessage.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(Post, { foreignKey: 'user_id', as: 'posts' });
 Post.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+// --- Social Features Associations ---
+
+// User <-> Like
+User.hasMany(Like, { foreignKey: 'user_id', as: 'likes' });
+Like.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// User <-> Comment
+User.hasMany(Comment, { foreignKey: 'user_id', as: 'comments' });
+Comment.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// User <-> FavoriteFolder
+User.hasMany(FavoriteFolder, { foreignKey: 'user_id', as: 'favoriteFolders' });
+FavoriteFolder.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// FavoriteFolder <-> Favorite
+FavoriteFolder.hasMany(Favorite, { foreignKey: 'folder_id', as: 'favorites' });
+Favorite.belongsTo(FavoriteFolder, { foreignKey: 'folder_id', as: 'folder' });
+
+// User <-> Favorite (Direct access for convenience)
+User.hasMany(Favorite, { foreignKey: 'user_id', as: 'allFavorites' });
+Favorite.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// Comment Self-Association (Replies)
+Comment.hasMany(Comment, { foreignKey: 'parent_id', as: 'replies' });
+Comment.belongsTo(Comment, { foreignKey: 'parent_id', as: 'parent' });
+
+// Polymorphic Associations (Manual Setup or Helpers)
+// Note: Sequelize polymorphic is a bit manual. We use hooks or scopes usually.
+// Here we define the reverse relationship for convenience where possible.
+
+// Post <-> Comment
+Post.hasMany(Comment, { 
+  foreignKey: 'target_id', 
+  constraints: false,
+  scope: { target_type: 'post' },
+  as: 'comments'
+});
+
+// ScenicSpot <-> Comment
+ScenicSpot.hasMany(Comment, { 
+  foreignKey: 'target_id', 
+  constraints: false,
+  scope: { target_type: 'scenic_spot' },
+  as: 'comments'
+});
+
+// Post <-> Like
+Post.hasMany(Like, { 
+  foreignKey: 'target_id', 
+  constraints: false,
+  scope: { target_type: 'post' },
+  as: 'likes'
+});
+
+// Comment <-> Like
+Comment.hasMany(Like, { 
+  foreignKey: 'target_id', 
+  constraints: false,
+  scope: { target_type: 'comment' },
+  as: 'likes'
+});
+
 // 导出模型和 Sequelize 实例
 module.exports = {
   sequelize,
@@ -26,5 +92,9 @@ module.exports = {
   ScenicSpot,
   Itinerary,
   ChatMessage,
-  Post
+  Post,
+  Comment,
+  Like,
+  Favorite,
+  FavoriteFolder
 };

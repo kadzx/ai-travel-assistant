@@ -13,6 +13,9 @@ const ErrorCodes = {
   user_exists: [1001, 'User already exists', '用户已存在'],
   user_not_found: [1002, 'User not found', '用户不存在'],
   password_error: [1003, 'Incorrect password', '密码错误'],
+  auth_token_missing: [4001, 'Token missing', '缺少访问令牌'],
+  auth_token_expired: [4001, 'Token expired', '令牌已过期'],
+  auth_token_invalid: [4001, 'Invalid token', '无效的令牌'],
   
   // Business Specific
   spot_not_found: [2001, 'Scenic spot not found', '景点不存在']

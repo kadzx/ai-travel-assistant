@@ -6,16 +6,34 @@ class AuthService {
   async register(data) {
     const { username, email, password } = data;
     
-    const existingUser = await User.findOne({ where: { username } });
+    // Check if username OR email exists
+    const existingUser = await User.findOne({ 
+      where: { 
+        [require('sequelize').Op.or]: [{ username }, { email }] 
+      } 
+    });
+    
     if (existingUser) {
-      throw new Error('user_exists'); // Will be caught by controller
+      throw new Error('user_exists'); 
     }
 
+    // Hash password is done in Model hook
     const user = await User.create({ username, email, password });
+    
+    // Generate token for immediate login after registration
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+    );
+
     const userData = user.toJSON();
     delete userData.password;
     
-    return userData;
+    return {
+      user: userData,
+      token
+    };
   }
 
   async login(email, password) {

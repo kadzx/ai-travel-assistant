@@ -33,19 +33,8 @@ class ChatService {
         content
       });
 
-      // 2. Retrieve history for context (limit to last 10 messages to save tokens)
-      const history = await ChatMessage.findAll({
-        where: { session_id: sessionId },
-        order: [['createdAt', 'ASC']],
-        limit: 10, // Adjust as needed
-        offset: 0 // In a real app, you might want to fetch the *latest* 10. 
-                  // If using ASC with limit, we get the oldest 10. 
-                  // Correct way: order DESC, limit 10, then reverse.
-      });
-      
-      // Re-fetch properly if needed, but for simplicity:
-      // Let's get all messages for this session, assuming sessions aren't huge.
-      // If sessions are huge, we need a better strategy.
+      // 2. Retrieve history for context
+      // Fetch all messages for this session to maintain context
       const allHistory = await ChatMessage.findAll({
         where: { session_id: sessionId },
         order: [['createdAt', 'ASC']]

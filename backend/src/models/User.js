@@ -32,6 +32,21 @@ const User = sequelize.define('User', {
     type: DataTypes.ENUM('user', 'admin'),
     defaultValue: 'user',
     comment: 'Role / 角色'
+  },
+  nickname: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: 'Nickname / 昵称'
+  },
+  avatar: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Avatar URL / 头像'
+  },
+  bio: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Bio / 简介'
   }
 }, {
   tableName: 'users',
