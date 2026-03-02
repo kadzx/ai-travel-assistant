@@ -77,6 +77,14 @@ Post.hasMany(Like, {
   as: 'likes'
 });
 
+// Post <-> Favorite
+Post.hasMany(Favorite, {
+  foreignKey: 'target_id',
+  constraints: false,
+  scope: { target_type: 'post' },
+  as: 'favorites'
+});
+
 // Comment <-> Like
 Comment.hasMany(Like, { 
   foreignKey: 'target_id', 

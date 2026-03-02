@@ -96,38 +96,129 @@ const userController = {
     switch (type) {
       case 'posts':
         // Get user's posts
-        data = await Post.findAll({
+        const posts = await Post.findAll({
           where: { user_id: userId },
           order: [['created_at', 'DESC']],
-          // Include like/comment counts if needed (simplified here)
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'username', 'nickname', 'avatar']
+            },
+            {
+              model: Like,
+              as: 'likes',
+              attributes: ['user_id']
+            }
+          ]
+        });
+
+        data = posts.map(post => {
+          const p = post.toJSON();
+          const isLiked = p.likes ? p.likes.some(l => String(l.user_id) === String(userId)) : false;
+          return {
+            id: p.id,
+            title: p.title,
+            image: p.images && p.images.length > 0 ? p.images[0] : null,
+            user: {
+              name: p.user.nickname || p.user.username,
+              avatar: p.user.avatar
+            },
+            likes: p.likes ? p.likes.length : 0,
+            isLiked: isLiked
+          };
         });
         break;
       
       case 'favorites':
-        // Get user's favorites (grouped by folders usually, but here flat list or folders)
-        // Let's return folders with preview
-        const folders = await FavoriteFolder.findAll({
-          where: { user_id: userId },
+        // Get user's favorites (flat list for now to simplify frontend waterfall)
+        const favorites = await Favorite.findAll({
+          where: { user_id: userId, target_type: 'post' },
+          order: [['created_at', 'DESC']],
           include: [
             {
-              model: Favorite,
-              as: 'favorites',
-              limit: 5, // Preview 5 items
-              order: [['created_at', 'DESC']]
+              model: Post,
+              as: 'post',
+              include: [
+                {
+                  model: User,
+                  as: 'user',
+                  attributes: ['id', 'username', 'nickname', 'avatar']
+                },
+                {
+                   model: Like,
+                   as: 'likes',
+                   attributes: ['user_id']
+                }
+              ]
             }
-          ],
-          order: [['created_at', 'DESC']]
+          ]
         });
-        data = folders;
+
+        data = favorites.map(fav => {
+          if (!fav.post) return null;
+          const p = fav.post.toJSON();
+          // Check if user also liked this favorited post
+          const isLiked = p.likes ? p.likes.some(l => String(l.user_id) === String(userId)) : false;
+          
+          return {
+            id: p.id,
+            title: p.title,
+            image: p.images && p.images.length > 0 ? p.images[0] : null,
+            user: {
+              name: p.user.nickname || p.user.username,
+              avatar: p.user.avatar
+            },
+            likes: p.likes ? p.likes.length : 0,
+            isLiked: isLiked,
+            favoritedAt: fav.created_at
+          };
+        }).filter(item => item !== null);
         break;
 
       case 'likes':
         // Get items liked by user
         const likes = await Like.findAll({
-          where: { user_id: userId },
-          order: [['created_at', 'DESC']]
+          where: { user_id: userId, target_type: 'post' },
+          order: [['created_at', 'DESC']],
+          attributes: ['created_at'], // Only need timestamp of like
+          include: [
+            {
+              model: Post,
+              as: 'post', // Ensure alias matches association
+              include: [
+                {
+                  model: User,
+                  as: 'user',
+                  attributes: ['id', 'username', 'nickname', 'avatar']
+                },
+                {
+                  model: Like,
+                  as: 'likes',
+                  attributes: ['user_id']
+                }
+              ]
+            }
+          ]
         });
-        data = likes;
+        
+        // Transform to flat post list with isLiked status
+        data = likes.map(like => {
+          if (!like.post) return null;
+          const p = like.post.toJSON();
+          return {
+            id: p.id,
+            title: p.title,
+            image: p.images && p.images.length > 0 ? p.images[0] : null,
+            user: {
+              name: p.user.nickname || p.user.username,
+              avatar: p.user.avatar
+            },
+            likes: p.likes ? p.likes.length : 0,
+            isLiked: true, // Since it's in user's liked list
+            likedAt: like.created_at
+          };
+        }).filter(item => item !== null);
         break;
 
       default:

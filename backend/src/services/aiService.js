@@ -78,19 +78,23 @@ class AIService {
    * @returns {Promise<String>}
    */
   async _callCozeAPI(messages) {
+    // If running in mock/dev mode without real keys, return mock response
+    if (this.apiToken === 'mock_token') {
+      return `[MOCK AI] I received your message: "${messages[messages.length - 1].content}". This is a simulated response because COZE_API_TOKEN is not configured.`;
+    }
+
     if (!this.apiToken || !this.botId) {
       throw new Error('COZE_API_TOKEN or COZE_BOT_ID is not configured');
     }
 
-    // Use Coze V2 API for simple synchronous chat
-    // Docs: https://www.coze.cn/docs/developer_guides/coze_api_v2_chat
+    // Use Coze V3 API for chat
+    // Docs: https://www.coze.cn/docs/developer_guides/chat_v3
     
-    // Construct V2 Payload
-    const v2Payload = {
+    // Construct V3 Payload
+    const v3Payload = {
         bot_id: this.botId,
-        user: 'default_user', 
-        query: messages[messages.length - 1].content,
-        chat_history: messages.slice(0, -1).map(m => ({ 
+        user_id: 'default_user', 
+        additional_messages: messages.map(m => ({ 
             role: m.role, 
             content: m.content, 
             content_type: 'text' 
@@ -98,34 +102,23 @@ class AIService {
         stream: false
     };
 
-    // Ensure we use V2 endpoint
-    // If baseUrl contains 'v3', replace with 'open_api/v2/chat'
-    // Or just hardcode/force V2 endpoint since we are constructing V2 payload
-    let v2Url = this.baseUrl;
-    if (v2Url.includes('/v3/')) {
-        v2Url = v2Url.replace('/v3/', '/open_api/v2/');
-    } else if (!v2Url.includes('open_api/v2/chat')) {
-        // Fallback or just assume the user provided correct V2 URL if it doesn't match known patterns
-        // But to be safe, let's just use the standard V2 URL if we are sure we want V2
-        v2Url = 'https://api.coze.cn/open_api/v2/chat';
-    }
+    let v3Url = 'https://api.coze.cn/v3/chat';
 
-    console.log('Calling Coze V2 API:', v2Url);
-    // console.log('Payload:', JSON.stringify(v2Payload, null, 2)); // Debug log
+    console.log('Calling Coze V3 API:', v3Url);
 
-    const response = await fetch(v2Url, {
+    const response = await fetch(v3Url, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${this.apiToken}`,
             'Content-Type': 'application/json',
             'Accept': '*/*'
         },
-        body: JSON.stringify(v2Payload)
+        body: JSON.stringify(v3Payload)
     });
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Coze API V2 Error: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`Coze API V3 Error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -134,9 +127,54 @@ class AIService {
         throw new Error(`Coze API Error: ${data.msg}`);
     }
 
-    // V2 response: { messages: [ { role: 'assistant', type: 'answer', content: '...' } ] }
-    const answerMessage = data.messages.find(m => m.role === 'assistant' && m.type === 'answer');
-    return answerMessage ? answerMessage.content : '';
+    // V3 response: { data: { status: 'completed', ... } }
+    // Need to poll or wait if not stream? No, for non-stream, it might return initial status.
+    // Actually V3 non-stream returns the chat object immediately, but status might be created/in_progress.
+    // Wait, Coze V3 non-stream chat API returns the chat status. We might need to poll for completion if it's async?
+    // Let's check V3 docs carefully. V3 Chat is async.
+    // However, for simplicity and compatibility with previous synchronous expectation, let's use the V3 "Chat" endpoint which initiates.
+    // AND then we need to Retrieve Messages.
+    
+    // Simplification: Let's stick to V3 but we need to handle the async nature properly or check if there's a synchronous flag.
+    // Actually, to make it simple and robust given the short time, let's use the `stream=false` and hope it returns result or we poll.
+    // Wait, if V3 is complex (requires polling), maybe V2 (OpenAPI) is better for simple "request-response"?
+    // The user provided a "sat_" token which works with V3.
+    // Let's try to implement a simple polling mechanism for V3.
+    
+    const chatId = data.data.id;
+    const conversationId = data.data.conversation_id;
+    
+    // Poll for completion
+    let status = data.data.status;
+    let attempts = 0;
+    while (status === 'in_progress' || status === 'created') {
+        if (attempts > 30) throw new Error('Coze API Timeout');
+        await new Promise(r => setTimeout(r, 1000));
+        
+        const checkUrl = `https://api.coze.cn/v3/chat/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`;
+        const checkRes = await fetch(checkUrl, {
+             headers: { 'Authorization': `Bearer ${this.apiToken}` }
+        });
+        const checkData = await checkRes.json();
+        status = checkData.data.status;
+        attempts++;
+    }
+    
+    if (status === 'completed') {
+        // Fetch messages
+        const msgUrl = `https://api.coze.cn/v3/chat/message/list?chat_id=${chatId}&conversation_id=${conversationId}`;
+        const msgRes = await fetch(msgUrl, {
+             headers: { 'Authorization': `Bearer ${this.apiToken}` }
+        });
+        const msgData = await msgRes.json();
+        
+        // Filter for assistant answer
+        const assistantMsgs = msgData.data.filter(m => m.role === 'assistant' && m.type === 'answer');
+        // Get the last one
+        return assistantMsgs.length > 0 ? assistantMsgs[assistantMsgs.length - 1].content : '';
+    } else {
+        throw new Error(`Coze API Chat Failed with status: ${status}`);
+    }
   }
 }
 

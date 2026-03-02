@@ -10,9 +10,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
+const path = require('path');
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files (uploads)
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // 路由
 app.use('/api', routes);
