@@ -33,6 +33,11 @@ const User = sequelize.define('User', {
     defaultValue: 'user',
     comment: 'Role / 角色'
   },
+  status: {
+    type: DataTypes.ENUM('active', 'banned'),
+    defaultValue: 'active',
+    comment: 'Status / 状态'
+  },
   nickname: {
     type: DataTypes.STRING(50),
     allowNull: true,
