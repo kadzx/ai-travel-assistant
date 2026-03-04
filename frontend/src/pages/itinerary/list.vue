@@ -36,8 +36,7 @@ onShow(() => {
 });
 
 const goToDetail = (id: string) => {
-  // uni.navigateTo({ url: `/pages/itinerary/detail?id=${id}` });
-  console.log('Navigating to detail', id);
+  uni.navigateTo({ url: `/pages/itinerary/detail?id=${id}` });
 };
 
 const goToCreate = () => {

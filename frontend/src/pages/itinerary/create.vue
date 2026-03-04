@@ -94,8 +94,9 @@ const submit = () => {
       uni.showToast({ title: '行程生成成功', icon: 'success' });
       
       setTimeout(() => {
-        uni.switchTab({ url: '/pages/itinerary/list' });
-      }, 1500);
+        // 跳转到预览页面，而不是直接回到列表
+        uni.navigateTo({ url: '/pages/itinerary/detail?preview=true' });
+      }, 1000);
     } catch (e: any) {
       uni.showToast({ title: e.message || '生成失败', icon: 'none' });
     } finally {

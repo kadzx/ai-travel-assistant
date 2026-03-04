@@ -1,4 +1,4 @@
-const { User, Post, Like, Favorite, FavoriteFolder, Comment } = require('../models');
+const { User, Post, Like, Favorite, FavoriteFolder, Comment, Follow } = require('../models');
 const asyncHandler = require('../middlewares/asyncHandler');
 const ResponseUtil = require('../utils/response');
 
@@ -43,6 +43,10 @@ const userController = {
     // 4. Liked Count (Items liked by user)
     const likedCount = await Like.count({ where: { user_id: userId } });
 
+    // 5. Follow counts
+    const followerCount = await Follow.count({ where: { following_id: userId } });
+    const followingCount = await Follow.count({ where: { follower_id: userId } });
+
     // Construct response
     const profileData = {
       ...user.toJSON(),
@@ -51,9 +55,62 @@ const userController = {
         favoriteCount,
         receivedLikesCount,
         likedCount,
-        followerCount: 0, // Placeholder as Follow feature is skipped
-        followingCount: 0 // Placeholder
+        followerCount,
+        followingCount
       }
+    };
+
+    return ResponseUtil.success(res, profileData);
+  }),
+
+  // Get Public Profile (for other user's home page)
+  // GET /api/user/:id
+  getPublicProfile: asyncHandler(async (req, res) => {
+    const targetUserId = parseInt(req.params.id);
+    const currentUserId = req.user ? req.user.id : null;
+
+    if (!targetUserId) {
+      return ResponseUtil.fail(res, 'param_error', 'Invalid user id');
+    }
+
+    const user = await User.findByPk(targetUserId, {
+      attributes: ['id', 'username', 'nickname', 'avatar', 'bio', 'created_at']
+    });
+
+    if (!user) {
+      return ResponseUtil.fail(res, 'user_not_found');
+    }
+
+    const postCount = await Post.count({ where: { user_id: targetUserId } });
+    const followerCount = await Follow.count({ where: { following_id: targetUserId } });
+    const followingCount = await Follow.count({ where: { follower_id: targetUserId } });
+
+    const userPosts = await Post.findAll({ where: { user_id: targetUserId }, attributes: ['id'] });
+    const postIds = userPosts.map(p => p.id);
+    let receivedLikesCount = 0;
+    if (postIds.length > 0) {
+      receivedLikesCount = await Like.count({
+        where: { target_id: postIds, target_type: 'post' }
+      });
+    }
+
+    let isFollowing = false;
+    if (currentUserId && currentUserId !== targetUserId) {
+      const follow = await Follow.findOne({
+        where: { follower_id: currentUserId, following_id: targetUserId }
+      });
+      isFollowing = !!follow;
+    }
+
+    const profileData = {
+      ...user.toJSON(),
+      stats: {
+        postCount,
+        followerCount,
+        followingCount,
+        receivedLikesCount
+      },
+      isFollowing
     };
 
     return ResponseUtil.success(res, profileData);
@@ -61,7 +118,7 @@ const userController = {
 
   // Update Profile
   // PUT /api/user/profile
-  // Body: { nickname, avatar, bio }
+  // Body: { nickname, avatar, bio } — avatar 可为 data URL (base64) 或旧版 URL
   updateProfile: asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { nickname, avatar, bio } = req.body;
@@ -71,10 +128,23 @@ const userController = {
       return ResponseUtil.fail(res, 'user_not_found');
     }
 
-    // Update fields if provided
     if (nickname !== undefined) user.nickname = nickname;
-    if (avatar !== undefined) user.avatar = avatar;
     if (bio !== undefined) user.bio = bio;
+
+    if (avatar !== undefined) {
+      const MAX_AVATAR_BASE64_LEN = 7 * 1024 * 1024; // ~5MB 原始图对应 base64 约 6.67MB
+      if (typeof avatar !== 'string' || !avatar.trim()) {
+        return ResponseUtil.fail(res, 'param_error', '头像不能为空');
+      }
+      if (avatar.startsWith('data:image/') && avatar.includes(';base64,')) {
+        if (avatar.length > MAX_AVATAR_BASE64_LEN) {
+          return ResponseUtil.fail(res, 'param_error', '头像图片不能超过 5MB');
+        }
+      } else if (!avatar.startsWith('http://') && !avatar.startsWith('https://')) {
+        return ResponseUtil.fail(res, 'param_error', '头像格式无效，请使用图片或有效链接');
+      }
+      user.avatar = avatar.trim();
+    }
 
     await user.save();
 

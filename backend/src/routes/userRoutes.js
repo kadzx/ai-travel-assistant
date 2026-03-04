@@ -3,16 +3,18 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// All user routes require authentication
-router.use(authMiddleware);
+// Authenticated routes first (so /profile and /activities don't match as /:id)
+router.get('/profile', authMiddleware, userController.getMyProfile);
+router.put('/profile', authMiddleware, userController.updateProfile);
+router.get('/activities', authMiddleware, userController.getMyActivities);
 
-// GET /api/user/profile
-router.get('/profile', userController.getMyProfile);
-
-// PUT /api/user/profile
-router.put('/profile', userController.updateProfile);
-
-// GET /api/user/activities
-router.get('/activities', userController.getMyActivities);
+// Public profile: GET /api/user/:id (optional auth for isFollowing)
+router.get('/:id', (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    return authMiddleware(req, res, next);
+  }
+  next();
+}, userController.getPublicProfile);
 
 module.exports = router;

@@ -1,56 +1,41 @@
 <template>
   <view class="container min-h-screen bg-[#F6F7F9] flex flex-col pb-safe">
-    <!-- Header Area -->
-    <view class="sticky top-0 z-50 bg-[#F6F7F9]/95 backdrop-blur-xl border-b border-gray-200/50 transition-all duration-300">
-      <!-- Status Bar Placeholder -->
+    <!-- Header Area（无系统栏，自定义样式） -->
+    <view class="sticky top-0 z-50 header-wrap">
       <view class="h-[var(--status-bar-height)]"></view>
-      
-      <!-- Top Bar -->
-      <view class="px-4 py-3 flex items-center justify-between">
-        <!-- Logo / Title -->
-        <view class="flex items-center gap-2 active:opacity-80 transition-opacity" @click="scrollToTop">
-          <view class="w-8 h-8 bg-black rounded-xl flex items-center justify-center shadow-lg shadow-black/10">
-            <text class="text-white font-bold text-lg">A</text>
+      <view class="px-4 py-3 flex items-center justify-between header-inner">
+        <view class="flex items-center gap-3 active:opacity-80 transition-opacity" @click="scrollToTop">
+          <view class="logo-box">
+            <text class="logo-text">A</text>
           </view>
-          <text class="text-xl font-extrabold text-gray-900 tracking-tight">AI Travel</text>
+          <text class="header-title">AI Travel</text>
         </view>
-
-        <!-- Right Actions -->
-        <view class="flex items-center gap-3">
-          <view class="w-9 h-9 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm active:scale-90 transition-transform">
+        <view class="flex items-center gap-2">
+          <view class="icon-btn" @click="goSearch">
             <u-icon name="search" size="20" color="#333"></u-icon>
           </view>
-          <view class="w-9 h-9 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm relative active:scale-90 transition-transform">
+          <view class="icon-btn relative" @click="goNotification">
             <u-icon name="bell" size="20" color="#333"></u-icon>
-            <view class="absolute top-2 right-2.5 w-1.5 h-1.5 bg-[#FF2442] rounded-full ring-2 ring-white"></view>
+            <view class="icon-dot"></view>
           </view>
         </view>
       </view>
 
-      <!-- Category Tabs -->
-      <view class="pb-2">
-        <scroll-view scroll-x class="whitespace-nowrap w-full" :show-scrollbar="false">
-          <view class="flex items-center gap-6 px-4 h-10">
-            <view 
-              v-for="(cat, idx) in categories" 
-              :key="idx"
-              class="relative flex flex-col items-center justify-center h-full transition-all duration-300"
-              @click="currentCat = idx"
-            >
-              <text 
-                class="text-[15px] transition-all duration-300"
-                :class="currentCat === idx ? 'text-black font-bold scale-110' : 'text-gray-400 font-medium'"
-              >
-                {{ cat }}
-              </text>
-              <!-- Active Indicator -->
-              <view 
-                class="absolute bottom-0 w-4 h-1 bg-[#FF2442] rounded-full transition-all duration-300 transform origin-center"
-                :class="currentCat === idx ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'"
-              ></view>
-            </view>
-          </view>
-        </scroll-view>
+      <!-- Tabs -->
+      <view class="flex items-center gap-6 px-2">
+        <view
+          v-for="(tab, index) in tabs"
+          :key="index"
+          class="text-[16px] font-medium transition-all relative py-2"
+          :class="currentTab === index ? 'text-gray-900 font-bold scale-105' : 'text-gray-400'"
+          @click="handleTabChange(index)"
+        >
+          <text>{{ tab.name }}</text>
+          <view
+            v-if="currentTab === index"
+            class="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"
+          ></view>
+        </view>
       </view>
     </view>
 
@@ -106,14 +91,32 @@ import ULoadmore from 'uview-plus/components/u-loadmore/u-loadmore.vue';
 // @ts-ignore
 import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
 
-const categories = ['推荐', '附近', '京都', '美食', '探店', '摄影', '亲子', '露营'];
-const currentCat = ref(0);
+const tabs = [{ name: '推荐' }, { name: '关注' }];
+const currentTab = ref(0);
 const loadStatus = ref('loadmore');
 const leftList = ref<MasonryItemProps[]>([]);
 const rightList = ref<MasonryItemProps[]>([]);
 const flowList = ref<MasonryItemProps[]>([]);
 const page = ref(1);
 const limit = 10;
+
+const handleTabChange = (index: number) => {
+  if (currentTab.value === index) return;
+  currentTab.value = index;
+  flowList.value = [];
+  leftList.value = [];
+  rightList.value = [];
+  page.value = 1;
+  loadData();
+};
+
+const goSearch = () => {
+  uni.navigateTo({ url: '/pages/search/search' });
+};
+
+const goNotification = () => {
+  uni.navigateTo({ url: '/pages/notification/list' });
+};
 
 // Event Listener for Post Updates (Like/Favorite)
 const handlePostUpdate = (data: any) => {
@@ -142,16 +145,22 @@ const handlePostUpdate = (data: any) => {
 const loadData = async () => {
   loadStatus.value = 'loading';
   try {
-    const res: any = await getPosts({ page: page.value, limit });
+    const params: any = { page: page.value, limit };
+    if (currentTab.value === 1) params.feed = 'following';
+    const res: any = await getPosts(params);
     if (res && res.list) {
+      const typeLabels: Record<string, string> = { recommend: '推荐', nearby: '附近', food: '美食', travel: '旅行', beauty: '彩妆' };
       const newPosts = res.list.map((p: any) => ({
         id: p.id,
         image: p.image || 'https://via.placeholder.com/300x400',
         title: p.title,
-        type: p.id % 3 === 0 ? 'HOT' : undefined, // Mock type for visual
+        type: p.type,
+        typeLabel: typeLabels[p.type] || p.type,
+        tags: p.tags || [],
         user: {
-          name: p.user.name,
-          avatar: p.user.avatar || '/static/logo.png'
+          id: p.user?.id,
+          name: p.user?.name,
+          avatar: p.user?.avatar || '/static/logo.png'
         },
         likes: p.likes,
         isLiked: p.isLiked
@@ -168,12 +177,14 @@ const loadData = async () => {
       
       flowList.value = [...flowList.value, ...newPosts];
 
-      if (page.value >= res.totalPages) {
+      if (res.totalPages == null || page.value >= res.totalPages) {
         loadStatus.value = 'nomore';
       } else {
         loadStatus.value = 'loadmore';
         page.value++;
       }
+    } else if (currentTab.value === 1 && (!res || !res.list || res.list.length === 0)) {
+      loadStatus.value = 'nomore';
     }
   } catch (error) {
     console.error('Load posts failed:', error);
@@ -242,5 +253,60 @@ onPullDownRefreshHook(onPullDownRefresh);
 
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 首页头部 */
+.header-wrap {
+  background: linear-gradient(180deg, #fff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.header-inner {
+  min-height: 48px;
+}
+.logo-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF2442 0%, #FF5E7D 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(255, 36, 66, 0.25);
+}
+.logo-text {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: transform 0.2s;
+  &:active {
+    transform: scale(0.95);
+  }
+}
+.icon-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: #FF2442;
+  border-radius: 50%;
+  border: 2px solid #fff;
 }
 </style>

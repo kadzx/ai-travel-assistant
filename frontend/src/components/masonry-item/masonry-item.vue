@@ -25,9 +25,9 @@
       <!-- Overlay Gradient -->
       <view class="absolute inset-0 bg-gradient-to-b from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></view>
       
-      <!-- Type Badge (Modern Glassmorphism) -->
-      <view v-if="item.type" class="absolute top-2 left-2 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 shadow-sm">
-         <text class="text-white text-[10px] font-bold tracking-wide uppercase">{{ item.type }}</text>
+      <!-- 分类/话题角标 -->
+      <view v-if="item.typeLabel || item.type" class="absolute top-2 left-2 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 shadow-sm">
+         <text class="text-white text-[10px] font-bold tracking-wide">{{ item.typeLabel || item.type }}</text>
       </view>
     </view>
 
@@ -37,15 +37,18 @@
       <text class="text-[14px] font-medium text-gray-800 leading-[1.4] line-clamp-2 tracking-tight">
         {{ item.title }}
       </text>
+      <view v-if="item.tags && item.tags.length" class="flex flex-wrap gap-1 mt-1">
+        <text v-for="t in item.tags.slice(0, 2)" :key="t" class="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] text-gray-500">#{{ t }}</text>
+      </view>
 
       <!-- Meta Info -->
       <view class="flex items-center justify-between mt-1">
         <!-- User -->
         <view class="flex items-center gap-1.5 flex-1 min-w-0">
           <image 
-            :src="item.user.avatar" 
+            :src="item.user?.avatar || '/static/logo.png'" 
             mode="aspectFill" 
-            class="w-5 h-5 rounded-full bg-gray-100 border border-gray-50 shrink-0"
+            class="w-[28px] h-[28px] rounded-full bg-gray-100 border border-gray-50 shrink-0"
           />
           <text class="text-[11px] text-gray-500 font-normal truncate">{{ item.user.name }}</text>
         </view>
@@ -76,7 +79,10 @@ export interface MasonryItemProps {
   image: string;
   title: string;
   type?: string;
+  typeLabel?: string;
+  tags?: string[];
   user: {
+    id?: number;
     name: string;
     avatar: string;
   };

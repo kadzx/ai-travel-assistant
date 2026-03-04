@@ -62,6 +62,18 @@ export const useUserStore = defineStore('user', () => {
     return true;
   };
 
+  const getUserInfo = async () => {
+    try {
+      const res: any = await http.get('/user/profile');
+      if (res) {
+        setUserInfo(res);
+        return res;
+      }
+    } catch (error) {
+      console.error('Failed to get user info:', error);
+    }
+  };
+
   return { 
     token, 
     userInfo, 
@@ -69,6 +81,7 @@ export const useUserStore = defineStore('user', () => {
     register, 
     logout,
     checkLogin,
+    getUserInfo,
     setUserInfo,
     setToken
   };

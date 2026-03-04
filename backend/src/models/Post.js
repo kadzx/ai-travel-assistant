@@ -31,6 +31,29 @@ const Post = sequelize.define('Post', {
     allowNull: true,
     defaultValue: [],
     comment: 'Images JSON Array / 图片JSON数组'
+  },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Location Name / 地点名称'
+  },
+  tags: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: [],
+    comment: 'Tags / 标签话题'
+  },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'recommend',
+    comment: 'Post Type / 帖子分类 (recommend, nearby, food, etc.)'
+  },
+  privacy: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'public',
+    comment: 'Privacy / 隐私设置 (public, private, friends)'
   }
 }, {
   tableName: 'posts',

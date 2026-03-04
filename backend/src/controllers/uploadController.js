@@ -19,6 +19,7 @@ const upload = multer({
 
 exports.uploadMiddleware = upload.single('file');
 
+// 上传后返回 URL，前端将 URL 写入 users.avatar 存入数据库（头像等）
 exports.uploadFile = (req, res) => {
   if (!req.file) {
     return ResponseUtil.fail(res, 'upload_error', 'No file uploaded');

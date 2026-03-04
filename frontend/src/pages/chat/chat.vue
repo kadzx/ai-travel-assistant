@@ -110,7 +110,9 @@
           :class="isValid ? 'bg-[#FF2442] shadow-md shadow-red-200' : 'bg-gray-200'"
           @click="handleSend"
         >
-          <u-icon name="arrow-up" color="#ffffff" size="18" :bold="true"></u-icon>
+          <!-- Fixed: Use plain text arrow or ensure u-icon is rendered correctly -->
+          <!-- Using text arrow as fallback or checking u-icon usage -->
+          <u-icon name="arrow-up" :color="isValid ? '#ffffff' : '#999999'" size="18" :bold="true"></u-icon>
         </view>
       </view>
     </view>
@@ -162,11 +164,13 @@ const initSession = async () => {
     const res: any = await startSession();
     if (res && res.sessionId) {
       sessionId.value = res.sessionId;
-      // Load history if needed, though startSession usually implies new or retrieving existing logic
-      // If backend supports persisting session per user, getHistory(sessionId) here
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('Init session failed', e);
+    const msg = (e?.errMsg || e?.message || '').toString();
+    if (msg.includes('fail') || msg.includes('refused') || msg.includes('network')) {
+      uni.showToast({ title: '无法连接服务器，请确保后端已启动 (localhost:3000)', icon: 'none', duration: 3000 });
+    }
   }
 };
 
@@ -226,6 +230,7 @@ const handleSend = () => {
 };
 
 onMounted(() => {
+  if (userStore.token) userStore.getUserInfo();
   initSession();
 });
 </script>

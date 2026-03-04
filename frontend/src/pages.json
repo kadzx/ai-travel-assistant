@@ -23,7 +23,8 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "我的行程"
+				"navigationStyle": "custom",
+				"navigationBarTitleText": ""
 			}
 		},
 		{
@@ -41,6 +42,7 @@
 		{
 			"path": "pages/user/profile",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "个人中心",
 				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"
@@ -57,7 +59,56 @@
 		{
 			"path": "pages/post/create",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "发布笔记",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/user/edit",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "编辑资料"
+			}
+		},
+		{
+			"path": "pages/search/search",
+			"style": {
+				"navigationBarTitleText": "搜索",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/notification/list",
+			"style": {
+				"navigationBarTitleText": "通知",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/itinerary/list",
+			"style": {
+				"navigationBarTitleText": "行程列表",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/itinerary/detail",
+			"style": {
+				"navigationBarTitleText": "行程详情",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/user/home",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "用户主页",
 				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"
 			}
@@ -80,6 +131,12 @@
 				"text": "行程",
 				"iconPath": "static/tabbar/home.png",
 				"selectedIconPath": "static/tabbar/home-active.png"
+			},
+			{
+				"pagePath": "pages/post/create",
+				"text": "发布",
+				"iconPath": "static/tabbar/plus.png",
+				"selectedIconPath": "static/tabbar/plus.png"
 			},
 			{
 				"pagePath": "pages/chat/chat",

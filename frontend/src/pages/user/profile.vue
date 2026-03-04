@@ -14,27 +14,22 @@
       ></view>
     </view>
 
-    <!-- Header / User Info -->
-    <view class="relative z-10 px-4 pt-24 pb-4">
+    <!-- Header / User Info（无顶栏，预留安全区） -->
+    <view class="relative z-10 px-4 pt-safe pb-4">
       <!-- User Card -->
       <view class="bg-white rounded-[24px] p-5 shadow-float mb-4">
-        <view class="flex items-start justify-between mb-4">
-          <view class="flex items-center gap-4">
-            <view class="relative -mt-10">
+        <view class="flex items-center justify-between mb-4">
+          <view class="flex items-center gap-3">
+            <view class="w-[40px] h-[40px] flex-shrink-0">
               <image
-                :src="userStore.userInfo?.avatar || '/static/logo.png'"
+                :src="headerAvatarSrc"
                 mode="aspectFill"
-                class="w-20 h-20 rounded-full border-[3px] border-white shadow-lg bg-white"
+                class="w-[40px] h-[40px] rounded-full border-[3px] border-white shadow-lg bg-white"
+                @error="onHeaderAvatarError"
               />
-              <view
-                class="absolute bottom-0 right-0 bg-gradient-to-r from-[#FF2442] to-[#FF5E7D] text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white shadow-sm flex items-center gap-0.5"
-              >
-                <u-icon name="level" color="#fff" size="10"></u-icon>
-                <text>Lv.3</text>
-              </view>
             </view>
 
-            <view class="pt-1">
+            <view>
               <text class="text-xl font-extrabold text-gray-900 block mb-0.5">{{
                 userStore.userInfo?.username || "未登录"
               }}</text>
@@ -44,14 +39,14 @@
             </view>
           </view>
 
-          <view class="flex gap-3 pt-1">
+          <view class="flex gap-3">
             <view
-              class="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100"
+              class="w-[40px] h-[40px] rounded-full bg-gray-50 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100"
             >
               <u-icon name="share-square" size="18" color="#333"></u-icon>
             </view>
             <view
-              class="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100"
+              class="w-[40px] h-[40px] rounded-full bg-gray-50 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100"
             >
               <u-icon name="setting" size="18" color="#333"></u-icon>
             </view>
@@ -101,6 +96,7 @@
           <view
             class="flex-1 bg-[#FF2442] flex items-center justify-center shadow-lg shadow-[#FF2442]/20 active:scale-[0.98] transition-all"
             style="height: 56px; border-radius: 20px"
+            @click="goToEditProfile"
           >
             <text class="text-white text-[18px] font-bold tracking-wide"
               >编辑资料</text
@@ -109,6 +105,7 @@
           <view
             class="flex-1 bg-gray-50 border border-gray-200 flex items-center justify-center active:bg-gray-100 transition-colors"
             style="height: 56px; border-radius: 20px"
+            @click="goToPublicHome"
           >
             <text class="text-gray-800 text-[18px] font-bold tracking-wide"
               >查看主页</text
@@ -179,7 +176,7 @@
                 <view class="flex items-center gap-1.5">
                   <image
                     :src="item.user?.avatar || '/static/logo.png'"
-                    class="w-4 h-4 rounded-full"
+                    class="w-[32px] h-[32px] rounded-full flex-shrink-0 bg-gray-100"
                     mode="aspectFill"
                   />
                   <text
@@ -227,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useUserStore } from "@/stores/user";
 // @ts-ignore
 import UIcon from "uview-plus/components/u-icon/u-icon.vue";
@@ -236,6 +233,17 @@ import { request } from "@/utils/request";
 const userStore = useUserStore();
 const currentTab = ref(0);
 const postList = ref<any[]>([]);
+
+// 顶部头像：优先用 store，加载失败时用兜底，避免空白
+const headerAvatarFallback = ref<string | null>(null);
+const headerAvatarSrc = computed(() =>
+  headerAvatarFallback.value !== null
+    ? headerAvatarFallback.value
+    : (userStore.userInfo?.avatar || "/static/logo.png")
+);
+const onHeaderAvatarError = () => {
+  headerAvatarFallback.value = "/static/logo.png";
+};
 
 const tabs = [
   { name: "笔记", type: "posts" },
@@ -269,13 +277,36 @@ const goToDetail = (id: string | number) => {
   });
 };
 
+const goToEditProfile = () => {
+  uni.navigateTo({
+    url: '/pages/user/edit'
+  });
+};
+
+const goToPublicHome = () => {
+  const id = userStore.userInfo?.id;
+  if (id != null) {
+    uni.navigateTo({ url: `/pages/user/home?id=${id}` });
+  } else {
+    uni.showToast({ title: '请先登录', icon: 'none' });
+  }
+};
+
 onMounted(() => {
-  if (userStore.userInfo) {
+  if (userStore.token) {
+    userStore.getUserInfo().then(() => loadData());
+  } else if (userStore.userInfo) {
     loadData();
-    // Refresh user info to update stats
-    userStore.getUserInfo();
   }
 });
+
+// 用户信息更新时重置头像兜底，以便显示新头像（如 base64）
+watch(
+  () => userStore.userInfo?.avatar,
+  () => {
+    headerAvatarFallback.value = null;
+  },
+);
 
 // Watch for login status change
 watch(
@@ -289,5 +320,8 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-/* Scoped styles */
+.pt-safe {
+  padding-top: calc(24px + constant(safe-area-inset-top));
+  padding-top: calc(24px + env(safe-area-inset-top));
+}
 </style>

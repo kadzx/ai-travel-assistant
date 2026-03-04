@@ -29,21 +29,24 @@
     <view
       class="px-5 pt-5 pb-4 -mt-6 relative bg-white rounded-t-3xl z-10 shadow-[0_-4px_16px_rgba(0,0,0,0.02)]"
     >
-      <!-- User Info Row (Moved up for better context) -->
+      <!-- User Info Row -->
       <view class="flex items-center justify-between mb-4">
-        <view class="flex items-center gap-2.5">
+        <view class="flex items-center gap-2.5 active:opacity-80" @click="goToUserHome">
           <image
             :src="post.user?.avatar || '/static/logo.png'"
-            class="w-9 h-9 rounded-full border border-gray-100 bg-gray-50"
+            class="w-[40px] h-[40px] rounded-full border border-gray-100 bg-gray-50 flex-shrink-0"
+            mode="aspectFill"
           />
           <text class="text-sm font-bold text-gray-900">{{
             post.user?.nickname || post.user?.username
           }}</text>
         </view>
         <view
-          class="px-3 py-1 bg-gray-100 rounded-full text-xs text-gray-500 font-medium"
-          >关注</view
-        >
+          v-if="post.user?.id"
+          class="px-3 py-1 rounded-full text-xs font-medium"
+          :class="isFollowingAuthor ? 'bg-gray-100 text-gray-500' : 'bg-[#FF2442] text-white'"
+          @click.stop="handleFollowAuthor"
+        >{{ isFollowingAuthor ? '已关注' : '关注' }}</view>
       </view>
 
       <!-- Title -->
@@ -60,17 +63,18 @@
         {{ post.content }}
       </text>
 
-      <!-- Tags / Date -->
-      <view class="mt-6 flex items-center justify-between">
-        <view class="flex items-center gap-2">
+      <!-- 话题 / 分类 / 日期 -->
+      <view class="mt-6 flex items-center justify-between flex-wrap gap-2">
+        <view class="flex items-center gap-2 flex-wrap">
           <view
-            class="px-2.5 py-1 bg-gray-50 rounded-md text-xs text-gray-500 font-medium"
-            >#京都</view
-          >
-          <view
-            class="px-2.5 py-1 bg-gray-50 rounded-md text-xs text-gray-500 font-medium"
-            >#摄影</view
-          >
+            v-for="tag in (post.tags || [])"
+            :key="tag"
+            class="px-2.5 py-1 bg-gray-50 rounded-md text-xs text-gray-500 font-medium active:opacity-80"
+            @click="goSearchByTag(tag)"
+          >#{{ tag }}</view>
+          <view v-if="post.typeLabel" class="px-2.5 py-1 bg-[#FFF0F2] rounded-md text-xs text-[#FF2442] font-medium">
+            {{ post.typeLabel }}
+          </view>
         </view>
         <text class="text-xs text-gray-400 font-medium">{{ post.date }}</text>
       </view>
@@ -91,7 +95,7 @@
       >
         <image
           :src="comment.user?.avatar || '/static/logo.png'"
-          class="w-8 h-8 rounded-full bg-gray-100 shrink-0 border border-gray-50"
+          class="w-[24px] h-[24px] rounded-full bg-gray-100 shrink-0 border border-gray-50"
         />
         <view class="flex-1">
           <view class="flex items-center gap-2 mb-1">
@@ -103,9 +107,7 @@
           <text class="text-[13px] text-gray-800 leading-normal block mb-1">
             {{ comment.content }}
           </text>
-          <text class="text-[10px] text-gray-400">{{
-            new Date(comment.created_at).toLocaleDateString()
-          }}</text>
+          <text class="text-[10px] text-gray-400">{{ formatPostDate(comment.created_at) }}</text>
         </view>
         <view class="flex flex-col items-center gap-0.5 pt-1">
           <u-icon name="heart" size="14" color="#cbd5e1"></u-icon>
@@ -224,6 +226,7 @@
 import { ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { getPostById } from "@/api/post";
+import { followUser, unfollowUser, checkFollow } from "@/api/follow";
 import {
   toggleLike as apiToggleLike,
   toggleFavorite as apiToggleFavorite,
@@ -237,9 +240,18 @@ import UPopup from "uview-plus/components/u-popup/u-popup.vue";
 
 const isLiked = ref(false);
 const isFavorited = ref(false);
+const isFollowingAuthor = ref(false);
 const commentsList = ref<any[]>([]);
 const commentContent = ref("");
 const showCommentInput = ref(false);
+
+const TYPE_LABELS: Record<string, string> = {
+  recommend: "推荐",
+  nearby: "附近",
+  food: "美食",
+  travel: "旅行",
+  beauty: "彩妆",
+};
 
 const post = ref<any>({
   id: 0,
@@ -251,7 +263,19 @@ const post = ref<any>({
   favorites: 0,
   comments: 0,
   user: {},
+  typeLabel: "",
 });
+
+function formatPostDate(v: any): string {
+  if (v == null || v === "") return "";
+  try {
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return "";
+  }
+}
 
 const handlePreviewImage = (current: number) => {
   uni.previewImage({
@@ -348,7 +372,7 @@ const loadPost = async (id: string) => {
   try {
     const res: any = await getPostById(id);
     if (res) {
-      post.value = {
+        post.value = {
         id: res.id,
         title: res.title,
         content: res.content,
@@ -356,21 +380,55 @@ const loadPost = async (id: string) => {
           res.images && res.images.length
             ? res.images
             : ["https://via.placeholder.com/800x800"],
-        date: new Date(res.created_at).toLocaleDateString(),
+        date: formatPostDate(res.created_at),
         likes: res.likesCount || 0,
         favorites: res.favoritesCount || 0,
         comments: res.commentsCount || 0,
         user: res.user,
+        tags: res.tags || [],
+        typeLabel: TYPE_LABELS[res.type] || res.type || "",
       };
       isLiked.value = res.isLiked;
       isFavorited.value = res.isFavorited;
-
+      if (res.user?.id) {
+        try {
+          const check: any = await checkFollow(res.user.id);
+          isFollowingAuthor.value = !!check?.isFollowing;
+        } catch (_) {}
+      }
       loadComments(id);
     }
   } catch (error) {
     console.error("Load post failed:", error);
     uni.showToast({ title: "加载失败", icon: "none" });
   }
+};
+
+const goToUserHome = () => {
+  const uid = post.value.user?.id;
+  if (uid) uni.navigateTo({ url: `/pages/user/home?id=${uid}` });
+};
+
+const handleFollowAuthor = async () => {
+  const uid = post.value.user?.id;
+  if (!uid) return;
+  try {
+    if (isFollowingAuthor.value) {
+      await unfollowUser(uid);
+      isFollowingAuthor.value = false;
+      uni.showToast({ title: "已取消关注", icon: "none" });
+    } else {
+      await followUser(uid);
+      isFollowingAuthor.value = true;
+      uni.showToast({ title: "关注成功", icon: "success" });
+    }
+  } catch (e) {
+    uni.showToast({ title: "操作失败", icon: "none" });
+  }
+};
+
+const goSearchByTag = (tag: string) => {
+  uni.navigateTo({ url: `/pages/search/search?tag=${encodeURIComponent(tag)}` });
 };
 
 onLoad((options) => {

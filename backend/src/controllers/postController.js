@@ -1,32 +1,90 @@
-const { Post, User, Like, Comment, Favorite } = require('../models');
+const { Post, User, Like, Comment, Favorite, Follow, sequelize } = require('../models');
+const { Op } = require('sequelize');
 const asyncHandler = require('../middlewares/asyncHandler');
 const ResponseUtil = require('../utils/response');
 
 const postController = {
   // Create a new post
   createPost: asyncHandler(async (req, res) => {
-    const { title, content, images } = req.body;
+    const { title, content, images, location, tags, type, privacy } = req.body;
     const userId = req.user.id;
 
     const post = await Post.create({
       user_id: userId,
       title,
       content,
-      images: images || []
+      images: images || [],
+      location,
+      tags: tags || [],
+      type: type || 'recommend',
+      privacy: privacy || 'public'
     });
 
     return ResponseUtil.success(res, post);
   }),
 
   // Get post feed (Masonry list)
+  // Query: page, limit, type, feed=following|recommend, userId, keyword, tag
   getPosts: asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
-    const currentUserId = req.user ? req.user.id : null; // Optional auth for feed
+    const type = req.query.type;
+    const feed = req.query.feed; // 'following' = only from users I follow
+    const userId = req.query.userId ? parseInt(req.query.userId) : null; // posts by this user
+    const keyword = (req.query.keyword || req.query.q || '').trim();
+    const tag = (req.query.tag || '').trim();
+    const currentUserId = req.user ? req.user.id : null;
+
+    const where = {};
+
+    if (userId) {
+      where.user_id = userId;
+      // When viewing a user's page, show their public + (if self) private posts
+      if (currentUserId !== userId) {
+        where.privacy = 'public';
+      }
+    } else if (feed === 'following') {
+      if (!currentUserId) {
+        return ResponseUtil.success(res, { list: [], total: 0, page: 1, totalPages: 0 });
+      }
+      const followingRows = await Follow.findAll({
+        where: { follower_id: currentUserId },
+        attributes: ['following_id']
+      });
+      const followingIds = followingRows.map(r => r.following_id);
+      if (followingIds.length === 0) {
+        return ResponseUtil.success(res, { list: [], total: 0, page: 1, totalPages: 0 });
+      }
+      where.user_id = { [Op.in]: followingIds };
+      where.privacy = 'public';
+    } else {
+      where.privacy = 'public';
+    }
+
+    if (type && type !== 'recommend') {
+      where.type = type;
+    }
+
+    if (keyword) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${keyword}%` } },
+        { content: { [Op.like]: `%${keyword}%` } }
+      ];
+    }
+
+    if (tag) {
+      // tags is JSON array, e.g. ["京都","摄影"]. MySQL: JSON_CONTAINS(tags, '"tag"', '$')
+      const escapedTag = tag.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      where[Op.and] = where[Op.and] || [];
+      where[Op.and].push(
+        sequelize.literal(`JSON_CONTAINS(tags, JSON_QUOTE('${escapedTag}'), '$')`)
+      );
+    }
 
     const { count, rows } = await Post.findAndCountAll({
-      attributes: ['id', 'title', 'images', 'created_at'],
+      where,
+      attributes: ['id', 'title', 'images', 'content', 'created_at', 'type', 'location', 'tags'],
       include: [
         {
           model: User,
@@ -52,7 +110,10 @@ const postController = {
         id: p.id,
         title: p.title,
         image: p.images && p.images.length > 0 ? p.images[0] : null,
+        images: p.images,
+        tags: p.tags || [],
         user: {
+          id: p.user.id,
           name: p.user.nickname || p.user.username,
           avatar: p.user.avatar
         },

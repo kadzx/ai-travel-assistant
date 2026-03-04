@@ -26,7 +26,7 @@ const assembleUrl = (url: string, params?: any): string => {
   return url.includes('?') ? `${url}&${queryString}` : `${url}?${queryString}`;
 };
 
-const request = <T = any>(options: RequestOptions): Promise<T> => {
+export const request = <T = any>(options: RequestOptions): Promise<T> => {
   return new Promise((resolve, reject) => {
     // 1. Base URL config
     let url = options.url.startsWith('http') ? options.url : BASE_URL + options.url;

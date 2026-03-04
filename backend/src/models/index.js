@@ -8,6 +8,7 @@ const Comment = require('./Comment');
 const Like = require('./Like');
 const Favorite = require('./Favorite');
 const FavoriteFolder = require('./FavoriteFolder');
+const Follow = require('./Follow');
 
 // 定义关联关系 / Define Associations
 
@@ -44,6 +45,12 @@ Favorite.belongsTo(FavoriteFolder, { foreignKey: 'folder_id', as: 'folder' });
 // User <-> Favorite (Direct access for convenience)
 User.hasMany(Favorite, { foreignKey: 'user_id', as: 'allFavorites' });
 Favorite.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// User <-> Follow (follower_id follows following_id)
+User.hasMany(Follow, { foreignKey: 'follower_id', as: 'followingList' });
+User.hasMany(Follow, { foreignKey: 'following_id', as: 'followerList' });
+Follow.belongsTo(User, { foreignKey: 'follower_id', as: 'follower' });
+Follow.belongsTo(User, { foreignKey: 'following_id', as: 'following' });
 
 // Comment Self-Association (Replies)
 Comment.hasMany(Comment, { foreignKey: 'parent_id', as: 'replies' });
@@ -85,12 +92,24 @@ Post.hasMany(Favorite, {
   as: 'favorites'
 });
 
+Favorite.belongsTo(Post, {
+  foreignKey: 'target_id',
+  constraints: false,
+  as: 'post'
+});
+
 // Comment <-> Like
 Comment.hasMany(Like, { 
   foreignKey: 'target_id', 
   constraints: false,
   scope: { target_type: 'comment' },
   as: 'likes'
+});
+
+Like.belongsTo(Post, {
+  foreignKey: 'target_id',
+  constraints: false,
+  as: 'post'
 });
 
 // 导出模型和 Sequelize 实例
@@ -104,5 +123,6 @@ module.exports = {
   Comment,
   Like,
   Favorite,
-  FavoriteFolder
+  FavoriteFolder,
+  Follow
 };

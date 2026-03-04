@@ -55,7 +55,17 @@ const { sequelize } = require('./src/models');
 // 启动服务器
 const startServer = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    // 使用 sync() 不 alter，避免已有表索引过多触发 MySQL 单表 64 键限制
+    await sequelize.sync();
+    // 将 users.avatar 升级为 LONGTEXT 以支持 Base64 存储（已有库需执行一次）
+    try {
+      await sequelize.query(
+        "ALTER TABLE users MODIFY COLUMN avatar LONGTEXT COMMENT 'Avatar as data URL (base64) or legacy URL'"
+      );
+      console.log('users.avatar 已升级为 LONGTEXT');
+    } catch (alterErr) {
+      if (alterErr.name !== 'SequelizeDatabaseError') console.warn('avatar 列升级跳过:', alterErr.message);
+    }
     console.log('数据库连接成功并已同步模型');
     
     app.listen(PORT, () => {

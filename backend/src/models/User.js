@@ -46,9 +46,9 @@ const User = sequelize.define(
       comment: "Nickname / 昵称",
     },
     avatar: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
-      comment: "Avatar URL / 头像",
+      comment: "Avatar as data URL (base64) or legacy URL / 头像 Base64 或 URL",
     },
     bio: {
       type: DataTypes.STRING,

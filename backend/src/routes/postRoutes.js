@@ -26,7 +26,14 @@ router.get('/:id', (req, res, next) => {
 }, postController.getPostById);
 
 // Protected routes
-router.post('/', authMiddleware, postController.createPost);
+router.post('/', (req, res, next) => {
+    // Ensure authentication before creating post
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ code: 401, msg: 'Unauthorized' });
+    }
+    authMiddleware(req, res, next);
+}, postController.createPost);
 router.delete('/:id', authMiddleware, postController.deletePost);
 
 module.exports = router;
