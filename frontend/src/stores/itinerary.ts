@@ -4,12 +4,11 @@ import http from '@/utils/request';
 
 export interface ItineraryItem {
   id: number | string;
-  destination: string;
-  days: number;
-  budget: number | string;
-  interests: string[];
+  title: string;
+  content?: any;
+  start_date?: string;
+  end_date?: string;
   created_at?: string;
-  content?: string;
   [key: string]: any;
 }
 
@@ -21,7 +20,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const getList = async () => {
     loading.value = true;
     try {
-      const res: any = await http.get('/itinerary/list');
+      const res: any = await http.get('/itineraries');
       list.value = res || [];
       return list.value;
     } catch (error) {
@@ -35,11 +34,10 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const generate = async (data: any) => {
     loading.value = true;
     try {
-      const res: any = await http.post('/itinerary/generate', data);
+      const res: any = await http.post('/itineraries/generate', data);
       
       if (res) {
         currentItinerary.value = res;
-        // Optionally prepend to list if it returns the full object
         list.value.unshift(res);
       }
       return res;
@@ -54,7 +52,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const getDetail = async (id: string | number) => {
     loading.value = true;
     try {
-      const res: any = await http.get(`/itinerary/${id}`);
+      const res: any = await http.get(`/itineraries/${id}`);
       currentItinerary.value = res;
       return res;
     } catch (error) {

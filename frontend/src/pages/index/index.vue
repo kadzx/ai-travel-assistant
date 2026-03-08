@@ -16,7 +16,9 @@
           </view>
           <view class="icon-btn relative" @click="goNotification">
             <u-icon name="bell" size="20" color="#333"></u-icon>
-            <view class="icon-dot"></view>
+            <view v-if="unreadCount > 0" class="noti-badge">
+              <text class="noti-badge-text">{{ unreadCount > 99 ? '99+' : unreadCount }}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -83,13 +85,50 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { onReachBottom, onPullDownRefresh as onPullDownRefreshHook } from '@dcloudio/uni-app';
+import { onShow, onReachBottom, onPullDownRefresh as onPullDownRefreshHook } from '@dcloudio/uni-app';
 import MasonryItem, { type MasonryItemProps } from '@/components/masonry-item/masonry-item.vue';
 import { getPosts } from '@/api/post';
+import { getUnreadCount } from '@/api/notification';
+import { useUserStore } from '@/stores/user';
 // @ts-ignore
 import ULoadmore from 'uview-plus/components/u-loadmore/u-loadmore.vue';
 // @ts-ignore
 import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
+
+const userStore = useUserStore();
+const unreadCount = ref(0);
+
+const NOTIFY_POLL_INTERVAL = 20000; // 20 秒轮询一次未读数
+let notifyPollTimer: ReturnType<typeof setInterval> | null = null;
+
+async function fetchUnreadCount(silent = false) {
+  if (!userStore.token) return;
+  const prev = unreadCount.value;
+  try {
+    const res = await getUnreadCount();
+    const next = res?.count ?? 0;
+    if (!silent && next > prev && prev >= 0) {
+      uni.showToast({ title: '你有新通知', icon: 'none' });
+    }
+    unreadCount.value = next;
+  } catch (_) {
+    unreadCount.value = 0;
+  }
+}
+
+function startNotifyPoll() {
+  if (notifyPollTimer) return;
+  notifyPollTimer = setInterval(() => {
+    fetchUnreadCount(false);
+  }, NOTIFY_POLL_INTERVAL);
+}
+
+function stopNotifyPoll() {
+  if (notifyPollTimer) {
+    clearInterval(notifyPollTimer);
+    notifyPollTimer = null;
+  }
+}
 
 const tabs = [{ name: '推荐' }, { name: '关注' }];
 const currentTab = ref(0);
@@ -223,10 +262,17 @@ const onPullDownRefresh = async () => {
 
 onMounted(() => {
   loadData();
+  fetchUnreadCount(true);
+  startNotifyPoll();
   uni.$on('postUpdate', handlePostUpdate);
 });
 
+onShow(() => {
+  fetchUnreadCount(true);
+});
+
 onUnmounted(() => {
+  stopNotifyPoll();
   uni.$off('postUpdate', handlePostUpdate);
 });
 
@@ -299,14 +345,24 @@ onPullDownRefreshHook(onPullDownRefresh);
     transform: scale(0.95);
   }
 }
-.icon-dot {
+.noti-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 6px;
-  height: 6px;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   background: #FF2442;
-  border-radius: 50%;
+  border-radius: 8px;
   border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.noti-badge-text {
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 </style>

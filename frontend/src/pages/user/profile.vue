@@ -61,34 +61,47 @@
           }}
         </text>
 
-        <!-- Stats -->
+        <!-- Stats：对接后端 stats -->
         <view
           class="flex items-center justify-around py-2 border-t border-gray-50"
         >
           <view
             class="flex flex-col items-center group active:opacity-70 transition-opacity"
           >
-            <text class="text-lg font-bold text-gray-900 font-din">142</text>
+            <text class="text-lg font-bold text-gray-900 font-din">{{ userStore.userInfo?.stats?.followingCount ?? 0 }}</text>
             <text class="text-xs text-gray-400 mt-0.5 font-medium">关注</text>
           </view>
           <view class="w-[1px] h-4 bg-gray-100"> </view>
           <view
             class="flex flex-col items-center group active:opacity-70 transition-opacity"
           >
-            <text class="text-lg font-bold text-gray-900 font-din">3.5k</text>
+            <text class="text-lg font-bold text-gray-900 font-din">{{ userStore.userInfo?.stats?.followerCount ?? 0 }}</text>
             <text class="text-xs text-gray-400 mt-0.5 font-medium">粉丝</text>
           </view>
           <view class="w-[1px] h-4 bg-gray-100"> </view>
           <view
             class="flex flex-col items-center group active:opacity-70 transition-opacity"
           >
-            <text class="text-lg font-bold text-gray-900 font-din">{{
-              userStore.userInfo?.stats?.receivedLikesCount || 0
-            }}</text>
-            <text class="text-xs text-gray-400 mt-0.5 font-medium"
-              >获赞与收藏</text
-            >
+            <text class="text-lg font-bold text-gray-900 font-din">{{ userStore.userInfo?.stats?.receivedLikesCount ?? 0 }}</text>
+            <text class="text-xs text-gray-400 mt-0.5 font-medium">获赞与收藏</text>
           </view>
+        </view>
+
+        <!-- 我的行程入口（小红书风格） -->
+        <view
+          class="mt-4 rounded-2xl bg-gradient-to-r from-[#FFF5F5] to-[#FFE8E8] border border-[#FFE0E0] p-4 flex items-center justify-between active:scale-[0.99] transition-transform"
+          @click="goToItinerary"
+        >
+          <view class="flex items-center gap-3">
+            <view class="w-10 h-10 rounded-xl bg-[#FF2442]/10 flex items-center justify-center">
+              <u-icon name="map" size="22" color="#FF2442"></u-icon>
+            </view>
+            <view>
+              <text class="text-[15px] font-bold text-gray-900 block">我的行程</text>
+              <text class="text-[12px] text-gray-500">AI 生成的旅行计划</text>
+            </view>
+          </view>
+          <u-icon name="arrow-right" size="18" color="#999"></u-icon>
         </view>
 
         <!-- Action Buttons -->
@@ -257,7 +270,7 @@ const loadData = async () => {
     const res: any = await request({
       url: "/user/activities",
       method: "GET",
-      data: { type },
+      params: { type },
     });
     postList.value = res || [];
   } catch (error) {
@@ -290,6 +303,10 @@ const goToPublicHome = () => {
   } else {
     uni.showToast({ title: '请先登录', icon: 'none' });
   }
+};
+
+const goToItinerary = () => {
+  uni.navigateTo({ url: '/pages/itinerary/list' });
 };
 
 onMounted(() => {

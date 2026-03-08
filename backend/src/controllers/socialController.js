@@ -1,6 +1,7 @@
 const { Like, Comment, Favorite, Post, ScenicSpot } = require('../models');
 const asyncHandler = require('../middlewares/asyncHandler');
 const ResponseUtil = require('../utils/response');
+const { createNotification } = require('../services/notificationService');
 
 const socialController = {
   // Toggle Like
@@ -25,6 +26,24 @@ const socialController = {
         target_id: targetId,
         target_type: targetType
       });
+      // 通知：点赞帖子 -> 通知帖子作者；点赞评论 -> 通知评论作者（与点赞者是否 admin 无关）
+      let recipientId = null;
+      const tid = parseInt(targetId, 10);
+      if (!Number.isNaN(tid) && targetType === 'post') {
+        const post = await Post.findByPk(tid, { attributes: ['user_id'] });
+        if (post) recipientId = post.user_id;
+      } else if (!Number.isNaN(tid) && targetType === 'comment') {
+        const comment = await Comment.findByPk(tid, { attributes: ['user_id'] });
+        if (comment) recipientId = comment.user_id;
+      }
+      if (recipientId) {
+        await createNotification(recipientId, userId, 'like', targetType, tid, null);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[通知] 点赞通知已创建 -> 接收者 userId:', recipientId, '点赞者 actorId:', userId);
+        }
+      } else if (process.env.NODE_ENV !== 'production') {
+        console.log('[通知] 点赞未发通知: 未找到帖子/评论 targetId=', targetId, 'targetType=', targetType);
+      }
       return ResponseUtil.success(res, { liked: true });
     }
   }),
@@ -42,9 +61,19 @@ const socialController = {
       parent_id: parentId || null
     });
 
-    // Fetch user info to return complete object
+    // 通知：评论帖子 -> 通知帖子作者
+    if (targetType === 'post') {
+      const post = await Post.findByPk(targetId, { attributes: ['user_id', 'title'] });
+      if (post && post.user_id !== userId) {
+        await createNotification(post.user_id, userId, 'comment', 'post', targetId, {
+          contentSnippet: content ? content.slice(0, 60) : '',
+          title: post.title
+        });
+      }
+    }
+
     const commentWithUser = await Comment.findByPk(comment.id, {
-      include: ['user'] // Assuming association 'user' exists in Comment model
+      include: ['user']
     });
 
     return ResponseUtil.success(res, commentWithUser);

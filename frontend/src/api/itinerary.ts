@@ -1,9 +1,12 @@
 import { request } from '@/utils/request';
 
+// 与后端路由一致：/api/itineraries
+const BASE = '/itineraries';
+
 // 获取行程列表
 export function getItineraryList() {
   return request({
-    url: '/itinerary',
+    url: BASE,
     method: 'GET'
   });
 }
@@ -11,7 +14,7 @@ export function getItineraryList() {
 // 生成行程
 export function generateItinerary(data: any) {
   return request({
-    url: '/itinerary/generate',
+    url: `${BASE}/generate`,
     method: 'POST',
     data
   });
@@ -20,7 +23,7 @@ export function generateItinerary(data: any) {
 // 保存行程
 export function saveItinerary(data: any) {
   return request({
-    url: '/itinerary',
+    url: BASE,
     method: 'POST',
     data
   });
@@ -29,7 +32,7 @@ export function saveItinerary(data: any) {
 // 获取行程详情
 export function getItineraryDetail(id: string | number) {
   return request({
-    url: `/itinerary/${id}`,
+    url: `${BASE}/${id}`,
     method: 'GET'
   });
 }

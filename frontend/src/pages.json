@@ -83,16 +83,18 @@
 		{
 			"path": "pages/notification/list",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "通知",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarBackgroundColor": "#F6F7F9",
 				"navigationBarTextStyle": "black"
 			}
 		},
 		{
 			"path": "pages/itinerary/list",
 			"style": {
-				"navigationBarTitleText": "行程列表",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "我的行程",
+				"navigationBarBackgroundColor": "#F6F7F9",
 				"navigationBarTextStyle": "black"
 			}
 		},

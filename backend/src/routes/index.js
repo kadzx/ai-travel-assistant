@@ -10,6 +10,7 @@ const adminRoutes = require('./adminRoutes');
 const postRoutes = require('./postRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const followRoutes = require('./followRoutes');
+const notificationRoutes = require('./notificationRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/spots', spotRoutes);
@@ -21,5 +22,6 @@ router.use('/chat', chatRoutes);
 router.use('/social', socialRoutes);
 router.use('/user', userRoutes);
 router.use('/admin', adminRoutes);
+router.use('/notifications', notificationRoutes);
 
 module.exports = router;

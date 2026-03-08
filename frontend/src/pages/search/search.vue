@@ -11,7 +11,8 @@
             placeholder="搜索帖子、标签"
             placeholder-class="text-gray-400"
             confirm-type="search"
-            @confirm="onSearch"
+            @input="onKeywordInput"
+            @confirm="onSearchConfirm"
           />
           <text v-if="keyword" class="text-[#FF2442] text-sm font-medium" @click="clearKeyword">取消</text>
         </view>
@@ -110,6 +111,10 @@ const list = ref<any[]>([]);
 const page = ref(1);
 const limit = 10;
 
+/** 防抖延迟：用户停止输入后再请求，避免边打字边疯狂请求 */
+const SEARCH_DEBOUNCE_MS = 350;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 onLoad((options: any) => {
   if (options.tag) {
     searchTag.value = decodeURIComponent(options.tag);
@@ -132,19 +137,58 @@ const goBack = () => {
   uni.navigateBack();
 };
 
-const clearKeyword = () => {
-  keyword.value = '';
-};
-
-const onSearch = () => {
+/** 执行一次搜索（重置列表并请求第一页） */
+const runSearch = () => {
   const q = keyword.value.trim();
   if (!q) return;
-  searchTag.value = ''; // manual search uses keyword
+  searchTag.value = '';
   searched.value = true;
   list.value = [];
   page.value = 1;
   loadStatus.value = 'loadmore';
   loadMore();
+};
+
+/** 输入时防抖搜索：边打字边出结果，停止输入 350ms 后自动搜 */
+const onKeywordInput = () => {
+  const q = keyword.value.trim();
+  if (!q) {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
+    searched.value = false;
+    list.value = [];
+    page.value = 1;
+    loadStatus.value = 'loadmore';
+    return;
+  }
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    runSearch();
+  }, SEARCH_DEBOUNCE_MS);
+};
+
+/** 键盘「搜索」键：取消防抖并立即搜索 */
+const onSearchConfirm = () => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  runSearch();
+};
+
+const clearKeyword = () => {
+  keyword.value = '';
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  searched.value = false;
+  list.value = [];
+  page.value = 1;
+  loadStatus.value = 'loadmore';
 };
 
 const loadMore = async () => {

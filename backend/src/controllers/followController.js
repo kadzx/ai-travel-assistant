@@ -1,24 +1,25 @@
 const { Follow, User } = require('../models');
 const asyncHandler = require('../middlewares/asyncHandler');
 const ResponseUtil = require('../utils/response');
+const { createNotification } = require('../services/notificationService');
 
 const followController = {
   // POST /api/follow - Follow a user
   follow: asyncHandler(async (req, res) => {
     const currentUserId = req.user.id;
-    const { userId: targetUserId } = req.body;
+    const targetId = Number(req.body.userId);
 
-    if (!targetUserId || Number(targetUserId) === currentUserId) {
+    if (!targetId || targetId === currentUserId) {
       return ResponseUtil.fail(res, 'param_error', 'Invalid user');
     }
 
     const [record, created] = await Follow.findOrCreate({
-      where: { follower_id: currentUserId, following_id: Number(targetUserId) },
-      defaults: { follower_id: currentUserId, following_id: Number(targetUserId) }
+      where: { follower_id: currentUserId, following_id: targetId },
+      defaults: { follower_id: currentUserId, following_id: targetId }
     });
 
-    if (!created) {
-      return ResponseUtil.success(res, { followed: true, message: 'Already following' });
+    if (created) {
+      await createNotification(targetId, currentUserId, 'follow', 'user', targetId, null);
     }
     return ResponseUtil.success(res, { followed: true });
   }),

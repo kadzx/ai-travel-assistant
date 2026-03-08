@@ -9,6 +9,7 @@ const Like = require('./Like');
 const Favorite = require('./Favorite');
 const FavoriteFolder = require('./FavoriteFolder');
 const Follow = require('./Follow');
+const Notification = require('./Notification');
 
 // 定义关联关系 / Define Associations
 
@@ -51,6 +52,11 @@ User.hasMany(Follow, { foreignKey: 'follower_id', as: 'followingList' });
 User.hasMany(Follow, { foreignKey: 'following_id', as: 'followerList' });
 Follow.belongsTo(User, { foreignKey: 'follower_id', as: 'follower' });
 Follow.belongsTo(User, { foreignKey: 'following_id', as: 'following' });
+
+// Notification: 接收者 / 触发者
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Notification.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
 
 // Comment Self-Association (Replies)
 Comment.hasMany(Comment, { foreignKey: 'parent_id', as: 'replies' });
@@ -124,5 +130,6 @@ module.exports = {
   Like,
   Favorite,
   FavoriteFolder,
-  Follow
+  Follow,
+  Notification
 };
