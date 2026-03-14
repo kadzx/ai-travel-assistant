@@ -8,6 +8,7 @@ from pathlib import Path
 
 import config
 from config import (
+    KEYWORD,
     CRAWLER_USER_ID,
     DATA_READY_DIR,
     DB_HOST,
@@ -54,9 +55,10 @@ def insert_post(conn, note: dict) -> bool:
     if not user_id:
         raise ValueError("请在 .env 中配置 CRAWLER_USER_ID")
     title = (note.get("title") or "无标题")[:255]
-    content = note.get("content") or ""
+    # 优先用富文本 HTML，前端可用 v-html 渲染
+    content = note.get("content_html") or note.get("content") or ""
     images = note.get("images") or []
-    tags = note.get("tags") or ["旅游规划"]
+    tags = note.get("tags") or [KEYWORD or "旅游规划"]
     if isinstance(images, list):
         images_json = json.dumps(images, ensure_ascii=False)
     else:

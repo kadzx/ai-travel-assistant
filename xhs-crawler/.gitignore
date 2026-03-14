@@ -6,6 +6,9 @@ env/
 # 环境变量（含 Cookie，勿提交）
 .env
 
+# Playwright 登录状态（勿提交）
+playwright_state.json
+
 # 爬取数据（可选：若不想把 raw/ready 提交到仓库可取消注释）
 data/raw/
 data/ready/
