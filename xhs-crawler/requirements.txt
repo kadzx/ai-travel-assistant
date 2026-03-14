@@ -1,0 +1,11 @@
+# 小红书 Web 签名
+xhshow>=0.1.0
+
+# HTTP 请求
+requests>=2.28.0
+
+# 环境变量
+python-dotenv>=1.0.0
+
+# MySQL 写入（与 Node 后端同库）
+PyMySQL>=1.0.0
