@@ -232,7 +232,6 @@ const loadData = async () => {
 };
 
 const handleItemClick = (item: MasonryItemProps) => {
-  console.log('Clicked:', item);
   uni.navigateTo({
     url: `/pages/post/detail?id=${item.id}`
   });

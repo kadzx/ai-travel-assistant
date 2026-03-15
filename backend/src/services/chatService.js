@@ -1,7 +1,6 @@
 const { ChatMessage } = require('../models');
-const aiService = require('./aiService');
+const cozeWorkflowService = require('./cozeWorkflowService');
 const logger = require('../utils/logger');
-// const { v4: uuidv4 } = require('uuid'); // Removed to avoid dependency issues
 
 class ChatService {
   /**
@@ -10,22 +9,19 @@ class ChatService {
    * @returns {Promise<Object>} Session info
    */
   async startSession(userId) {
-    // Generate a unique session ID
-    // Simple random ID generator as fallback
     const sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     return { sessionId };
   }
 
   /**
-   * Send a message and get AI response
-   * @param {Number} userId 
-   * @param {String} sessionId 
-   * @param {String} content 
-   * @returns {Promise<Object>} AI response message
+   * 发送消息并通过 SSE 流式返回 AI 回复（仅此一种聊天方式）
+   * @param {Number} userId
+   * @param {String} sessionId
+   * @param {String} content
+   * @param {import('express').Response} res - 已设置 SSE 头的响应对象
    */
-  async sendMessage(userId, sessionId, content) {
+  async sendMessageStream(userId, sessionId, content, res) {
     try {
-      // 1. Save user message
       await ChatMessage.create({
         user_id: userId,
         session_id: sessionId,
@@ -33,8 +29,6 @@ class ChatService {
         content
       });
 
-      // 2. Retrieve history for context
-      // Fetch all messages for this session to maintain context
       const allHistory = await ChatMessage.findAll({
         where: { session_id: sessionId },
         order: [['createdAt', 'ASC']]
@@ -45,21 +39,26 @@ class ChatService {
         content: msg.content
       }));
 
-      // 3. Call AI
-      const aiResponseContent = await aiService.chat(messages);
+      const payload = { type: 'chat', messages };
 
-      // 4. Save AI response
-      const aiMessage = await ChatMessage.create({
-        user_id: userId,
-        session_id: sessionId,
-        role: 'assistant',
-        content: aiResponseContent
+      await cozeWorkflowService.streamWorkflowToResponse(payload, sessionId, res, async (parsed) => {
+        try {
+          await ChatMessage.create({
+            user_id: userId,
+            session_id: sessionId,
+            role: 'assistant',
+            content: parsed.content || ''
+          });
+        } catch (e) {
+          logger.error('ChatService save assistant message error:', e);
+        }
       });
-
-      return aiMessage;
     } catch (error) {
-      logger.error('ChatService sendMessage error:', error);
-      throw error;
+      logger.error('ChatService sendMessageStream error:', error);
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        res.status(500).json({ code: 500, message: error.message || 'Stream failed' });
+      }
     }
   }
 

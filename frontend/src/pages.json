@@ -101,6 +101,7 @@
 		{
 			"path": "pages/itinerary/detail",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "行程详情",
 				"navigationBarBackgroundColor": "#FFFFFF",
 				"navigationBarTextStyle": "black"

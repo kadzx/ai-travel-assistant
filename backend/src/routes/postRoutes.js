@@ -35,5 +35,6 @@ router.post('/', (req, res, next) => {
     authMiddleware(req, res, next);
 }, postController.createPost);
 router.delete('/:id', authMiddleware, postController.deletePost);
+router.post('/:id/generate-itinerary', authMiddleware, postController.generateItinerary);
 
 module.exports = router;

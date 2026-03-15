@@ -155,7 +155,7 @@
               >
                 <image
                   :src="
-                    item.image ||
+                    getDisplayImageUrl(item.image) ||
                     'https://via.placeholder.com/300x400?text=暂无图'
                   "
                   mode="widthFix"
@@ -186,7 +186,7 @@
               >
                 <image
                   :src="
-                    item.image ||
+                    getDisplayImageUrl(item.image) ||
                     'https://via.placeholder.com/300x400?text=暂无图'
                   "
                   mode="widthFix"
@@ -234,6 +234,7 @@ import { useUserStore } from "@/stores/user";
 import { getPublicProfile } from "@/api/user";
 import { followUser, unfollowUser } from "@/api/follow";
 import { getPosts } from "@/api/post";
+import { getDisplayImageUrl } from "@/utils/imageProxy";
 
 const userStore = useUserStore();
 const loading = ref(true);

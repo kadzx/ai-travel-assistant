@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
   message: string;
 }
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 interface RequestOptions {
   url: string;
@@ -59,7 +59,7 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
 
     uni.request({
       url,
-      method: options.method || 'GET',
+      method: (options.method || 'GET') as any,
       data: options.data,
       header,
       success: (res) => {

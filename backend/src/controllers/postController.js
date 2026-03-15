@@ -2,6 +2,8 @@ const { Post, User, Like, Comment, Favorite, Follow, sequelize } = require('../m
 const { Op } = require('sequelize');
 const asyncHandler = require('../middlewares/asyncHandler');
 const ResponseUtil = require('../utils/response');
+const { rewritePostImages } = require('../utils/xhsImageRewrite');
+const cozeWorkflowService = require('../services/cozeWorkflowService');
 
 const postController = {
   // Create a new post
@@ -103,10 +105,11 @@ const postController = {
       distinct: true 
     });
 
-    // Format for frontend masonry
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    // Format for frontend masonry，并把 xhscdn 图链重写成本地 URL（若本地有文件）
     const posts = rows.map(post => {
       const p = post.toJSON();
-      return {
+      const item = {
         id: p.id,
         title: p.title,
         image: p.images && p.images.length > 0 ? p.images[0] : null,
@@ -120,6 +123,7 @@ const postController = {
         likes: p.likes ? p.likes.length : 0,
         isLiked: currentUserId ? p.likes.some(l => String(l.user_id) === String(currentUserId)) : false
       };
+      return rewritePostImages(item, baseUrl);
     });
 
     return ResponseUtil.success(res, {
@@ -181,7 +185,9 @@ const postController = {
     delete result.likes;
     delete result.favorites;
 
-    return ResponseUtil.success(res, result);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const out = rewritePostImages(result, baseUrl);
+    return ResponseUtil.success(res, out);
   }),
 
   // Delete post
@@ -200,7 +206,38 @@ const postController = {
 
     await post.destroy();
     return ResponseUtil.success(res, null);
-  })
+  }),
+
+  /**
+   * POST /posts/:id/generate-itinerary
+   * 从帖子正文调用 Coze 工作流 type: posts，SSE 流式返回行程结果。
+   * 请求需登录；帖子存在即可（不校验是否本人）。
+   */
+  generateItinerary: async (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+      return ResponseUtil.fail(res, 'params_error', 'Post ID is required');
+    }
+    const post = await Post.findByPk(id, { attributes: ['id', 'title', 'content'] });
+    if (!post) {
+      return ResponseUtil.fail(res, 'post_not_found', 'Post not found');
+    }
+    const plain = post.get ? post.get({ plain: true }) : post;
+    const content = [plain.title, plain.content].filter(Boolean).join('\n\n').trim() || plain.content || '';
+    if (!content) {
+      return ResponseUtil.fail(res, 'params_error', 'Post has no content to generate itinerary');
+    }
+    const sessionId = `post-${id}-${Date.now()}`;
+    const payload = { type: 'posts', content };
+    try {
+      await cozeWorkflowService.streamWorkflowToResponse(payload, sessionId, res, () => {});
+    } catch (err) {
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        res.status(500).json({ code: 500, message: err.message || 'Generate failed' });
+      }
+    }
+  }
 };
 
 module.exports = postController;

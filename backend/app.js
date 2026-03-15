@@ -16,8 +16,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (uploads)
+// 静态图片：/uploads 对应 backend/public/uploads
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// 占位图：CDN 无法下载时返回此图，避免前端 403
+app.get('/placeholder-image.svg', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/placeholder-image.svg'));
+});
 
 // 路由
 app.use('/api', routes);

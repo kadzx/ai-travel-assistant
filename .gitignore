@@ -10,6 +10,9 @@ node_modules/
 # Database
 mysql-data/
 
+# Backend 上传/迁移图片目录（避免提交大量静态文件）
+backend/public/
+
 # IDE & Editor
 .vscode/
 .idea/

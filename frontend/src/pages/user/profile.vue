@@ -175,7 +175,7 @@
           >
             <image
               :src="
-                item.image || `https://picsum.photos/300/400?random=${index}`
+                getDisplayImageUrl(item.image) || `https://picsum.photos/300/400?random=${index}`
               "
               mode="aspectFill"
               class="w-full h-48 bg-gray-100 block"
@@ -242,6 +242,7 @@ import { useUserStore } from "@/stores/user";
 // @ts-ignore
 import UIcon from "uview-plus/components/u-icon/u-icon.vue";
 import { request } from "@/utils/request";
+import { getDisplayImageUrl } from "@/utils/imageProxy";
 
 const userStore = useUserStore();
 const currentTab = ref(0);

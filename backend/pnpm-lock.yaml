@@ -26,6 +26,9 @@ importers:
       joi:
         specifier: ^17.11.0
         version: 17.13.3
+      jsonriver:
+        specifier: ^1.1.1
+        version: 1.1.1
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.3
@@ -34,16 +37,16 @@ importers:
         version: 1.10.1
       multer:
         specifier: ^2.1.0
-        version: 2.1.0
+        version: 2.1.1
       mysql2:
         specifier: ^3.6.5
-        version: 3.18.2(@types/node@25.3.2)
+        version: 3.19.1(@types/node@25.5.0)
       openai:
         specifier: ^6.25.0
-        version: 6.25.0
+        version: 6.29.0
       sequelize:
         specifier: ^6.35.1
-        version: 6.37.7(mysql2@3.18.2(@types/node@25.3.2))
+        version: 6.37.8(mysql2@3.19.1(@types/node@25.5.0))
       winston:
         specifier: ^3.11.0
         version: 3.19.0
@@ -99,8 +102,8 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/node@25.3.2':
-    resolution: {integrity: sha512-RpV6r/ij22zRRdyBPcxDeKAzH43phWVKEjL2iksqo1Vz3CuBUrgmPpPhALKiRfU7OMCmeeO9vECBMsV0hMTG8Q==}
+  '@types/node@25.5.0':
+    resolution: {integrity: sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==}
 
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
@@ -534,6 +537,9 @@ packages:
   jsonfile@6.2.0:
     resolution: {integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==}
 
+  jsonriver@1.1.1:
+    resolution: {integrity: sha512-w/y/ZvC0YlJxRjySXt6hEji3RltOLAbSiDe3jlWekbIT7qLIOJF+tGNscwTWJZhoNQzi1dItJVMM2jEPZbHSEQ==}
+
   jsonwebtoken@9.0.3:
     resolution: {integrity: sha512-MT/xP0CrubFRNLNKvxJ2BYfy53Zkm++5bX9dtuPbqAeQpTVe0MQTFhao8+Cp//EmJp244xt6Drw/GVEGCUj40g==}
     engines: {node: '>=12', npm: '>=6'}
@@ -641,12 +647,12 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  multer@2.1.0:
-    resolution: {integrity: sha512-TBm6j41rxNohqawsxlsWsNNh/VdV4QFXcBvRcPhXaA05EZ79z0qJ2bQFpync6JBoHTeNY5Q1JpG7AlTjdlfAEA==}
+  multer@2.1.1:
+    resolution: {integrity: sha512-mo+QTzKlx8R7E5ylSXxWzGoXoZbOsRMpyitcht8By2KHvMbf3tjwosZ/Mu/XYU6UuJ3VZnODIrak5ZrPiPyB6A==}
     engines: {node: '>= 10.16.0'}
 
-  mysql2@3.18.2:
-    resolution: {integrity: sha512-UfEShBFAZZEAKjySnTUuE7BgqkYT4mx+RjoJ5aqtmwSSvNcJ/QxQPXz/y3jSxNiVRedPfgccmuBtiPCSiEEytw==}
+  mysql2@3.19.1:
+    resolution: {integrity: sha512-yn4zh+Uxu5J3Zvi6Ao96lJ7BSBRkspHflWQAmOPND+htbpIKDQw99TTvPzgihKO/QyMickZopO4OsnixnpcUwA==}
     engines: {node: '>= 8.0'}
     peerDependencies:
       '@types/node': '>= 8'
@@ -696,8 +702,8 @@ packages:
   one-time@1.0.0:
     resolution: {integrity: sha512-5DXOiRKwuSEcQ/l0kGCF6Q3jcADFv5tSmRaJck/OqkVFcOzutB134KRSfF0xDrL39MNnqxbHBbUUcjZIhTgb2g==}
 
-  openai@6.25.0:
-    resolution: {integrity: sha512-mEh6VZ2ds2AGGokWARo18aPISI1OhlgdEIC1ewhkZr8pSIT31dec0ecr9Nhxx0JlybyOgoAT1sWeKtwPZzJyww==}
+  openai@6.29.0:
+    resolution: {integrity: sha512-YxoArl2BItucdO89/sN6edksV0x47WUTgkgVfCgX7EuEMhbirENsgYe5oO4LTjBL9PtdKtk2WqND1gSLcTd2yw==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -729,8 +735,8 @@ packages:
   path-to-regexp@0.1.12:
     resolution: {integrity: sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==}
 
-  pg-connection-string@2.11.0:
-    resolution: {integrity: sha512-kecgoJwhOpxYU21rZjULrmrBJ698U2RxXofKVzOn5UDj61BPj/qMb7diYUR1nLScCDbrztQFl1TaQZT0t1EtzQ==}
+  pg-connection-string@2.12.0:
+    resolution: {integrity: sha512-U7qg+bpswf3Cs5xLzRqbXbQl85ng0mfSV/J0nnA31MCLgvEaAo7CIhmeyrmJpOr7o+zm0rXK+hNnT5l9RHkCkQ==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -812,8 +818,8 @@ packages:
     resolution: {integrity: sha512-G9c0qlIWQSK29pR/5U2JF5dDQeqqHRragoyahj/Nx4KOOQ3CPPfzxnfqFPCSB7x5UgjOgnZ61nSxz+fjDpRlJg==}
     engines: {node: '>= 10.0.0'}
 
-  sequelize@6.37.7:
-    resolution: {integrity: sha512-mCnh83zuz7kQxxJirtFD7q6Huy6liPanI67BSlbzSYgVNl5eXVdE2CN1FuAeZwG1SNpGsNRCV+bJAVVnykZAFA==}
+  sequelize@6.37.8:
+    resolution: {integrity: sha512-HJ0IQFqcTsTiqbEgiuioYFMSD00TP6Cz7zoTti+zVVBwVe9fEhev9cH6WnM3XU31+ABS356durAb99ZuOthnKw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       ibm_db: '*'
@@ -1077,7 +1083,7 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/node@25.3.2':
+  '@types/node@25.5.0':
     dependencies:
       undici-types: 7.18.2
 
@@ -1525,6 +1531,8 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  jsonriver@1.1.1: {}
+
   jsonwebtoken@9.0.3:
     dependencies:
       jws: 4.0.1
@@ -1628,16 +1636,16 @@ snapshots:
 
   ms@2.1.3: {}
 
-  multer@2.1.0:
+  multer@2.1.1:
     dependencies:
       append-field: 1.0.0
       busboy: 1.6.0
       concat-stream: 2.0.0
       type-is: 1.6.18
 
-  mysql2@3.18.2(@types/node@25.3.2):
+  mysql2@3.19.1(@types/node@25.5.0):
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.5.0
       aws-ssl-profiles: 1.1.2
       denque: 2.1.0
       generate-function: 2.3.1
@@ -1690,7 +1698,7 @@ snapshots:
     dependencies:
       fn.name: 1.1.0
 
-  openai@6.25.0: {}
+  openai@6.29.0: {}
 
   package-json-from-dist@1.0.1: {}
 
@@ -1707,7 +1715,7 @@ snapshots:
 
   path-to-regexp@0.1.12: {}
 
-  pg-connection-string@2.11.0: {}
+  pg-connection-string@2.12.0: {}
 
   picocolors@1.1.1: {}
 
@@ -1795,7 +1803,7 @@ snapshots:
 
   sequelize-pool@7.1.0: {}
 
-  sequelize@6.37.7(mysql2@3.18.2(@types/node@25.3.2)):
+  sequelize@6.37.8(mysql2@3.19.1(@types/node@25.5.0)):
     dependencies:
       '@types/debug': 4.1.12
       '@types/validator': 13.15.10
@@ -1805,7 +1813,7 @@ snapshots:
       lodash: 4.17.23
       moment: 2.30.1
       moment-timezone: 0.5.48
-      pg-connection-string: 2.11.0
+      pg-connection-string: 2.12.0
       retry-as-promised: 7.1.1
       semver: 7.7.4
       sequelize-pool: 7.1.0
@@ -1814,7 +1822,7 @@ snapshots:
       validator: 13.15.26
       wkx: 0.5.0
     optionalDependencies:
-      mysql2: 3.18.2(@types/node@25.3.2)
+      mysql2: 3.19.1(@types/node@25.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -1976,7 +1984,7 @@ snapshots:
 
   wkx@0.5.0:
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 25.5.0
 
   wrap-ansi@7.0.0:
     dependencies:

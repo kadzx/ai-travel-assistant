@@ -1,6 +1,7 @@
 const { User, Post, Like, Favorite, FavoriteFolder, Comment, Follow } = require('../models');
 const asyncHandler = require('../middlewares/asyncHandler');
 const ResponseUtil = require('../utils/response');
+const { rewritePostImages } = require('../utils/xhsImageRewrite');
 
 const userController = {
   // Get Current User Profile (My Profile)
@@ -186,10 +187,11 @@ const userController = {
         data = posts.map(post => {
           const p = post.toJSON();
           const isLiked = p.likes ? p.likes.some(l => String(l.user_id) === String(userId)) : false;
-          return {
+          const item = {
             id: p.id,
             title: p.title,
             image: p.images && p.images.length > 0 ? p.images[0] : null,
+            images: p.images || [],
             user: {
               name: p.user.nickname || p.user.username,
               avatar: p.user.avatar
@@ -197,6 +199,7 @@ const userController = {
             likes: p.likes ? p.likes.length : 0,
             isLiked: isLiked
           };
+          return rewritePostImages(item, `${req.protocol}://${req.get('host')}`);
         });
         break;
       
@@ -228,13 +231,12 @@ const userController = {
         data = favorites.map(fav => {
           if (!fav.post) return null;
           const p = fav.post.toJSON();
-          // Check if user also liked this favorited post
           const isLiked = p.likes ? p.likes.some(l => String(l.user_id) === String(userId)) : false;
-          
-          return {
+          const item = {
             id: p.id,
             title: p.title,
             image: p.images && p.images.length > 0 ? p.images[0] : null,
+            images: p.images || [],
             user: {
               name: p.user.nickname || p.user.username,
               avatar: p.user.avatar
@@ -243,6 +245,7 @@ const userController = {
             isLiked: isLiked,
             favoritedAt: fav.created_at
           };
+          return rewritePostImages(item, `${req.protocol}://${req.get('host')}`);
         }).filter(item => item !== null);
         break;
 
@@ -276,18 +279,20 @@ const userController = {
         data = likes.map(like => {
           if (!like.post) return null;
           const p = like.post.toJSON();
-          return {
+          const item = {
             id: p.id,
             title: p.title,
             image: p.images && p.images.length > 0 ? p.images[0] : null,
+            images: p.images || [],
             user: {
               name: p.user.nickname || p.user.username,
               avatar: p.user.avatar
             },
             likes: p.likes ? p.likes.length : 0,
-            isLiked: true, // Since it's in user's liked list
+            isLiked: true,
             likedAt: like.created_at
           };
+          return rewritePostImages(item, `${req.protocol}://${req.get('host')}`);
         }).filter(item => item !== null);
         break;
 

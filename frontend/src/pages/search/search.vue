@@ -37,7 +37,7 @@
           <view v-for="(item, index) in leftList" :key="item.id" @click="goDetail(item.id)">
             <view class="bg-white rounded-xl overflow-hidden shadow-sm">
               <image
-                :src="item.image || 'https://via.placeholder.com/300x400'"
+                :src="getDisplayImageUrl(item.image) || 'https://via.placeholder.com/300x400'"
                 mode="widthFix"
                 class="w-full block"
                 style="min-height: 120px;"
@@ -65,7 +65,7 @@
           <view v-for="(item, index) in rightList" :key="item.id" @click="goDetail(item.id)">
             <view class="bg-white rounded-xl overflow-hidden shadow-sm">
               <image
-                :src="item.image || 'https://via.placeholder.com/300x400'"
+                :src="getDisplayImageUrl(item.image) || 'https://via.placeholder.com/300x400'"
                 mode="widthFix"
                 class="w-full block"
                 style="min-height: 120px;"
@@ -101,6 +101,7 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getPosts } from '@/api/post';
+import { getDisplayImageUrl } from '@/utils/imageProxy';
 
 const keyword = ref('');
 const searchTag = ref(''); // when opened via ?tag=xxx

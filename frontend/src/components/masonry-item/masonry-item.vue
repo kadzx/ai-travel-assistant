@@ -13,7 +13,7 @@
       ></view>
       
       <image 
-        :src="item.image" 
+        :src="displayImageUrl" 
         mode="widthFix" 
         class="w-full block object-cover will-change-transform transition-opacity duration-500"
         :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
@@ -70,7 +70,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, watch } from 'vue';
+import { defineProps, defineEmits, ref, watch, computed } from 'vue';
+import { getDisplayImageUrl } from '@/utils/imageProxy';
 // @ts-ignore
 import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
 
@@ -95,6 +96,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['click', 'like']);
+
+const displayImageUrl = computed(() => getDisplayImageUrl(props.item.image));
 
 const imageLoaded = ref(false);
 const isLiked = ref(props.item.isLiked || false);
