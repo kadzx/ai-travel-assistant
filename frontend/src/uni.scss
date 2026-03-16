@@ -14,27 +14,38 @@
 
 /* 颜色变量 */
 
-/* 行为相关颜色 */
-$uni-color-primary: #007aff;
-$uni-color-success: #4cd964;
-$uni-color-warning: #f0ad4e;
-$uni-color-error: #dd524d;
+/* 奶油极简风 — 行为相关颜色 */
+$uni-color-primary: #E8A87C;
+$uni-color-success: #95B8A3;
+$uni-color-warning: #F0C987;
+$uni-color-error: #FF6B6B;
+
+/* 奶油风 — 品牌色系 */
+$cream-bg: #FFF8F0;
+$cream-dark: #FFF0E6;
+$primary: #E8A87C;
+$caramel: #D4A574;
+$matcha: #95B8A3;
+$fog-blue: #B8C5D6;
+$light-pink: #F5D5C8;
+$light-green: #D4E8DB;
+$light-blue: #DFE8F0;
 
 /* 文字基本颜色 */
-$uni-text-color: #333; // 基本色
+$uni-text-color: #3D3D3D; // 主文字
 $uni-text-color-inverse: #fff; // 反色
-$uni-text-color-grey: #999; // 辅助灰色，如加载更多的提示信息
-$uni-text-color-placeholder: #808080;
+$uni-text-color-grey: #8C8C8C; // 副文字
+$uni-text-color-placeholder: #BFBFBF;
 $uni-text-color-disable: #c0c0c0;
 
 /* 背景颜色 */
-$uni-bg-color: #fff;
-$uni-bg-color-grey: #f8f8f8;
-$uni-bg-color-hover: #f1f1f1; // 点击状态颜色
+$uni-bg-color: #FFF8F0;
+$uni-bg-color-grey: #FFF8F0;
+$uni-bg-color-hover: #FFF0E6; // 点击状态颜色
 $uni-bg-color-mask: rgba(0, 0, 0, 0.4); // 遮罩颜色
 
 /* 边框颜色 */
-$uni-border-color: #c8c7cc;
+$uni-border-color: rgba(0, 0, 0, 0.05);
 
 /* 尺寸变量 */
 
@@ -48,10 +59,10 @@ $uni-img-size-sm: 20px;
 $uni-img-size-base: 26px;
 $uni-img-size-lg: 40px;
 
-/* Border Radius */
-$uni-border-radius-sm: 2px;
-$uni-border-radius-base: 3px;
-$uni-border-radius-lg: 6px;
+/* Border Radius — 奶油风大圆角 */
+$uni-border-radius-sm: 8px;
+$uni-border-radius-base: 12px;
+$uni-border-radius-lg: 20px;
 $uni-border-radius-circle: 50%;
 
 /* 水平间距 */

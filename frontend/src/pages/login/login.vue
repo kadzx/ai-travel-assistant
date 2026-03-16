@@ -1,152 +1,138 @@
 <template>
-  <view class="login-container relative min-h-100vh bg-white px-8 pt-20 box-border">
-    <!-- Header Area -->
-    <view class="mb-12 flex flex-col items-center">
-      <image src="/static/logo.png" mode="aspectFit" class="w-20 h-20 mb-4 rounded-xl shadow-sm" />
-      <text class="text-2xl font-bold text-gray-900 tracking-wide">欢迎来到 AI Travel</text>
-      <text class="mt-2 text-sm text-gray-400">探索世界，记录美好</text>
+  <view class="login-page">
+    <!-- 顶部弧形装饰背景 -->
+    <view class="top-decoration">
+      <view class="arc-bg"></view>
+      <view class="top-icon">🧳</view>
+      <text class="top-title">{{ currentTab === 0 ? '欢迎回来 👋' : '开启旅程 🎒' }}</text>
+      <text class="top-subtitle">{{ currentTab === 0 ? '登录后解锁 AI 行程规划' : '注册开始你的旅行之旅' }}</text>
     </view>
 
-    <!-- Tab Switcher (Custom) -->
-    <view class="flex justify-center mb-10">
-      <view 
-        class="relative px-4 py-2 text-lg font-medium transition-colors duration-300"
-        :class="currentTab === 0 ? 'text-gray-900 scale-105' : 'text-gray-400'"
-        @click="handleTabChange(0)"
-      >
-        登录
-        <view v-if="currentTab === 0" class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-primary rounded-full transition-all duration-300"></view>
-      </view>
-      <view class="mx-4 text-gray-300 self-center">|</view>
-      <view 
-        class="relative px-4 py-2 text-lg font-medium transition-colors duration-300"
-        :class="currentTab === 1 ? 'text-gray-900 scale-105' : 'text-gray-400'"
-        @click="handleTabChange(1)"
-      >
-        注册
-        <view v-if="currentTab === 1" class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-primary rounded-full transition-all duration-300"></view>
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-inner">
+        <view 
+          class="tab-item" 
+          :class="{ active: currentTab === 0 }"
+          @click="handleTabChange(0)"
+        >
+          <text>登录</text>
+        </view>
+        <view 
+          class="tab-item"
+          :class="{ active: currentTab === 1 }"
+          @click="handleTabChange(1)"
+        >
+          <text>注册</text>
+        </view>
+        <!-- 滑动指示器 -->
+        <view class="tab-indicator" :style="{ left: currentTab === 0 ? '4px' : '50%' }"></view>
       </view>
     </view>
 
-    <!-- Form Area -->
-    <view class="w-full">
+    <!-- 表单区 -->
+    <view class="form-area">
       <u-form :model="form" ref="uForm" :rules="rules" :errorType="['toast']">
         
-        <!-- Username (Register only) -->
-        <view v-if="currentTab === 1" class="mb-6 animate-fade-in-down">
-          <view class="bg-gray-50 rounded-full px-5 py-3 flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/20">
-            <u-icon name="account" color="#909399" size="20"></u-icon>
-            <u-form-item prop="username" borderBottom="false" class="flex-1 ml-2 !mb-0 !pb-0">
-              <u-input
-                v-model="form.username"
-                placeholder="请输入昵称"
-                border="none"
-                clearable
-                fontSize="15px"
-                customStyle="padding: 0; background: transparent;"
-              ></u-input>
-            </u-form-item>
-          </view>
+        <!-- 昵称（注册） -->
+        <view v-if="currentTab === 1" class="input-card animate-field">
+          <text class="input-emoji">👤</text>
+          <u-form-item prop="username" borderBottom="false" class="form-item-inner">
+            <u-input
+              v-model="form.username"
+              placeholder="请输入昵称"
+              border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
+            ></u-input>
+          </u-form-item>
         </view>
 
-        <!-- Email -->
-        <view class="mb-6">
-          <view class="bg-gray-50 rounded-full px-5 py-3 flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/20">
-            <u-icon name="email" color="#909399" size="20"></u-icon>
-            <u-form-item prop="email" borderBottom="false" class="flex-1 ml-2 !mb-0 !pb-0">
-              <u-input
-                v-model="form.email"
-                placeholder="请输入邮箱"
-                border="none"
-                clearable
-                fontSize="15px"
-                customStyle="padding: 0; background: transparent;"
-              ></u-input>
-            </u-form-item>
-          </view>
+        <!-- 邮箱 -->
+        <view class="input-card">
+          <text class="input-emoji">📧</text>
+          <u-form-item prop="email" borderBottom="false" class="form-item-inner">
+            <u-input
+              v-model="form.email"
+              placeholder="请输入邮箱"
+              border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
+            ></u-input>
+          </u-form-item>
         </view>
 
-        <!-- Password -->
-        <view class="mb-6">
-          <view class="bg-gray-50 rounded-full px-5 py-3 flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/20">
-            <u-icon name="lock" color="#909399" size="20"></u-icon>
-            <u-form-item prop="password" borderBottom="false" class="flex-1 ml-2 !mb-0 !pb-0">
-              <u-input
-                v-model="form.password"
-                type="password"
-                placeholder="请输入密码"
-                border="none"
-                clearable
-                fontSize="15px"
-                customStyle="padding: 0; background: transparent;"
-              ></u-input>
-            </u-form-item>
-          </view>
+        <!-- 密码 -->
+        <view class="input-card">
+          <text class="input-emoji">🔒</text>
+          <u-form-item prop="password" borderBottom="false" class="form-item-inner">
+            <u-input
+              v-model="form.password"
+              type="password"
+              placeholder="请输入密码"
+              border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
+            ></u-input>
+          </u-form-item>
         </view>
 
-        <!-- Confirm Password (Register only) -->
-        <view v-if="currentTab === 1" class="mb-6 animate-fade-in-up">
-          <view class="bg-gray-50 rounded-full px-5 py-3 flex items-center transition-all focus-within:ring-2 focus-within:ring-primary/20">
-            <u-icon name="lock-fill" color="#909399" size="20"></u-icon>
-            <u-form-item prop="confirmPassword" borderBottom="false" class="flex-1 ml-2 !mb-0 !pb-0">
-              <u-input
-                v-model="form.confirmPassword"
-                type="password"
-                placeholder="请确认密码"
-                border="none"
-                clearable
-                fontSize="15px"
-                customStyle="padding: 0; background: transparent;"
-              ></u-input>
-            </u-form-item>
-          </view>
+        <!-- 确认密码（注册） -->
+        <view v-if="currentTab === 1" class="input-card animate-field">
+          <text class="input-emoji">🔐</text>
+          <u-form-item prop="confirmPassword" borderBottom="false" class="form-item-inner">
+            <u-input
+              v-model="form.confirmPassword"
+              type="password"
+              placeholder="请确认密码"
+              border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
+            ></u-input>
+          </u-form-item>
         </view>
-
       </u-form>
 
-      <!-- Action Button -->
-      <view class="mt-10">
-        <button 
-          class="w-full bg-primary text-white rounded-full py-3 text-lg font-medium shadow-lg shadow-primary/30 active:scale-98 transition-transform flex items-center justify-center border-none"
-          :disabled="loading"
-          @click="handleSubmit"
-        >
-          <text v-if="!loading">{{ currentTab === 0 ? '登录' : '立即注册' }}</text>
-          <u-loading-icon v-else color="#ffffff" mode="circle"></u-loading-icon>
-        </button>
-      </view>
+      <!-- 提交按钮 -->
+      <button 
+        class="submit-btn"
+        :disabled="loading"
+        @click="handleSubmit"
+      >
+        <text v-if="!loading">{{ currentTab === 0 ? '登录' : '立即注册' }}</text>
+        <u-loading-icon v-else color="#ffffff" mode="circle"></u-loading-icon>
+      </button>
 
-      <!-- Footer Actions -->
-      <view class="mt-6 flex justify-between text-sm text-gray-500 px-2" v-if="currentTab === 0">
-        <text @click="uni.showToast({title: '暂未开放', icon: 'none'})">忘记密码?</text>
-        <text class="text-primary font-medium" @click="handleTabChange(1)">注册账号</text>
+      <!-- 底部链接 -->
+      <view class="footer-link" v-if="currentTab === 0">
+        <text class="link-text" @click="uni.showToast({title: '暂未开放', icon: 'none'})">忘记密码?</text>
+        <text class="link-primary" @click="handleTabChange(1)">注册账号</text>
       </view>
-       <view class="mt-6 flex justify-center text-sm text-gray-500 px-2" v-else>
-        <text>已有账号? <text class="text-primary font-medium ml-1" @click="handleTabChange(0)">去登录</text></text>
+      <view class="footer-link center" v-else>
+        <text class="link-text">已有账号? <text class="link-primary" @click="handleTabChange(0)">去登录</text></text>
       </view>
+    </view>
 
-      <!-- Social Login (Mock) -->
-      <view class="absolute bottom-10 left-0 w-full px-8 box-border">
-        <view class="flex items-center justify-center mb-6">
-          <view class="h-[1px] bg-gray-200 flex-1"></view>
-          <text class="mx-4 text-xs text-gray-400">其他登录方式</text>
-          <view class="h-[1px] bg-gray-200 flex-1"></view>
+    <!-- 第三方登录 -->
+    <view class="social-area">
+      <view class="divider-row">
+        <view class="divider-line"></view>
+        <text class="divider-text">或</text>
+        <view class="divider-line"></view>
+      </view>
+      <view class="social-icons">
+        <view class="social-btn" @click="uni.showToast({title: '微信登录暂未开放', icon: 'none'})">
+          <text class="social-emoji">📱</text>
         </view>
-        <view class="flex justify-center gap-8">
-          <view class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center border border-green-100" @click="uni.showToast({title: '微信登录暂未开放', icon: 'none'})">
-            <u-icon name="weixin-fill" color="#07C160" size="24"></u-icon>
-          </view>
-           <view class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100" @click="uni.showToast({title: '苹果登录暂未开放', icon: 'none'})">
-            <u-icon name="apple-fill" color="#333" size="24"></u-icon>
-          </view>
-        </view>
-        
-        <!-- Agreement -->
-        <view class="mt-6 flex justify-center items-center text-xs text-gray-400">
-           <text>登录即代表同意 <text class="text-primary">用户协议</text> 和 <text class="text-primary">隐私政策</text></text>
+        <view class="social-btn" @click="uni.showToast({title: '苹果登录暂未开放', icon: 'none'})">
+          <text class="social-emoji">🍎</text>
         </view>
       </view>
-
+      <text class="agreement-text">登录即代表同意 <text class="link-primary">用户协议</text> 和 <text class="link-primary">隐私政策</text></text>
     </view>
   </view>
 </template>
@@ -154,7 +140,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue";
 import { useUserStore } from "@/stores/user";
-// Explicitly import components to ensure they work in uni-app
 // @ts-ignore
 import UForm from "uview-plus/components/u-form/u-form.vue";
 // @ts-ignore
@@ -168,7 +153,7 @@ import ULoadingIcon from "uview-plus/components/u-loading-icon/u-loading-icon.vu
 
 const userStore = useUserStore();
 const uForm = ref();
-const currentTab = ref(0); // 0: Login, 1: Register
+const currentTab = ref(0);
 const loading = ref(false);
 
 const form = reactive({
@@ -189,7 +174,6 @@ const rules = computed(() => {
       { min: 6, message: "密码长度不能少于6位", trigger: ["blur", "change"] },
     ],
   };
-
   if (currentTab.value === 1) {
     return {
       ...baseRules,
@@ -208,7 +192,6 @@ const rules = computed(() => {
       ],
     };
   }
-
   return baseRules;
 });
 
@@ -221,40 +204,22 @@ const handleTabChange = (index: number) => {
 
 const handleSubmit = () => {
   if (!uForm.value) return;
-  
   uForm.value.validate().then(async () => {
     loading.value = true;
     try {
       if (currentTab.value === 0) {
-        // Login
-        await userStore.login({
-          email: form.email,
-          password: form.password,
-        });
+        await userStore.login({ email: form.email, password: form.password });
         uni.switchTab({ url: "/pages/index/index" });
       } else {
-        // Register
-        await userStore.register({
-          email: form.email,
-          password: form.password,
-          username: form.username,
-        });
+        await userStore.register({ email: form.email, password: form.password, username: form.username });
         uni.showToast({ title: "注册成功，正在登录...", icon: "success" });
-        
-        // Auto login after register
         setTimeout(async () => {
-           await userStore.login({
-            email: form.email,
-            password: form.password,
-          });
+          await userStore.login({ email: form.email, password: form.password });
           uni.switchTab({ url: "/pages/index/index" });
         }, 1500);
       }
     } catch (error: any) {
-      uni.showToast({
-        title: error.message || "操作失败",
-        icon: "none",
-      });
+      uni.showToast({ title: error.message || "操作失败", icon: "none" });
     } finally {
       loading.value = false;
     }
@@ -265,18 +230,177 @@ const handleSubmit = () => {
 </script>
 
 <style lang="scss" scoped>
-/* Scoped styles for fine-tuning */
-.login-container {
-  /* Ensure full height coverage */
+.login-page {
   min-height: 100vh;
+  background: #FFF8F0;
+  position: relative;
 }
 
-/* Custom Input Styles override */
-:deep(.u-form-item__body) {
-  padding: 0 !important;
+/* 顶部弧形装饰 */
+.top-decoration {
+  position: relative;
+  padding: 60px 0 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.arc-bg {
+  position: absolute;
+  top: 0; left: -20%; right: -20%;
+  height: 110%;
+  background: linear-gradient(180deg, #FFF0E6 0%, #FFF8F0 100%);
+  border-radius: 0 0 50% 50%;
+}
+.top-icon {
+  position: relative; z-index: 1;
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #E8A87C, #D4A574);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 6px 20px rgba(232, 168, 124, 0.3);
+  margin-bottom: 16px;
+}
+.top-title {
+  position: relative; z-index: 1;
+  font-size: 24px; font-weight: 700;
+  color: #3D3D3D;
+  margin-bottom: 6px;
+}
+.top-subtitle {
+  position: relative; z-index: 1;
+  font-size: 14px; color: #8C8C8C;
 }
 
-:deep(.u-form-item__body__right__message) {
-  margin-left: 0 !important;
+/* Tab 切换 */
+.tab-bar {
+  padding: 0 32px;
+  margin-bottom: 24px;
 }
+.tab-inner {
+  position: relative;
+  display: flex;
+  background: #F5F0EB;
+  border-radius: 24px;
+  padding: 4px;
+}
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 15px; font-weight: 500;
+  color: #8C8C8C;
+  position: relative; z-index: 1;
+  transition: color 0.3s;
+  &.active { color: #3D3D3D; font-weight: 600; }
+}
+.tab-indicator {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  width: calc(50% - 4px);
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 表单区 */
+.form-area {
+  padding: 0 32px;
+}
+.input-card {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 4px 16px;
+  margin-bottom: 14px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  &:focus-within {
+    border-color: #E8A87C;
+    box-shadow: 0 0 0 3px rgba(232, 168, 124, 0.1);
+  }
+}
+.input-emoji {
+  font-size: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.form-item-inner {
+  flex: 1;
+}
+.animate-field {
+  animation: field-in 0.3s ease-out;
+}
+@keyframes field-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 提交按钮 */
+.submit-btn {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(135deg, #E8A87C, #D4A574);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 17px; font-weight: 600;
+  margin-top: 24px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(232, 168, 124, 0.35);
+  transition: all 0.2s;
+  &:active { transform: scale(0.97); opacity: 0.9; }
+  &[disabled] { background: #E0E0E0; box-shadow: none; }
+}
+
+/* 底部链接 */
+.footer-link {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 4px 0;
+  &.center { justify-content: center; }
+}
+.link-text { font-size: 13px; color: #8C8C8C; }
+.link-primary { font-size: 13px; color: #E8A87C; font-weight: 600; }
+
+/* 第三方登录 */
+.social-area {
+  position: absolute;
+  bottom: 40px; left: 0; right: 0;
+  padding: 0 32px;
+}
+.divider-row {
+  display: flex; align-items: center;
+  margin-bottom: 20px;
+}
+.divider-line { flex: 1; height: 1px; background: rgba(0,0,0,0.06); }
+.divider-text { margin: 0 16px; font-size: 12px; color: #BFBFBF; }
+
+.social-icons {
+  display: flex; justify-content: center; gap: 24px;
+  margin-bottom: 16px;
+}
+.social-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #F5F0EB;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  &:active { transform: scale(0.95); }
+}
+.social-emoji { font-size: 22px; }
+
+.agreement-text {
+  display: block;
+  text-align: center;
+  font-size: 11px; color: #BFBFBF;
+}
+
+/* uview 样式覆盖 */
+:deep(.u-form-item__body) { padding: 0 !important; }
+:deep(.u-form-item__body__right__message) { margin-left: 0 !important; }
 </style>

@@ -107,6 +107,15 @@ const itineraryController = {
       return ResponseUtil.fail(res, 'not_found', 'Itinerary not found');
     }
     return ResponseUtil.success(res, itinerary);
+  }),
+
+  deleteItinerary: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const result = await itineraryService.deleteItinerary(req.user.id, id);
+    if (!result) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary not found');
+    }
+    return ResponseUtil.success(res, { message: 'Deleted successfully' });
   })
 };
 

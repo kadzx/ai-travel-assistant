@@ -1,15 +1,15 @@
 <template>
   <view class="edit-profile-container">
-    <!-- Navbar -->
+    <!-- 毛玻璃顶栏 -->
     <view class="navbar">
       <view class="status-bar"></view>
       <view class="nav-content">
         <view class="nav-btn back-btn" @click="goBack">
-          <u-icon name="arrow-left" size="22" color="#1a1a1a"></u-icon>
+          <u-icon name="arrow-left" size="22" color="#5B4636"></u-icon>
         </view>
         <text class="nav-title">编辑资料</text>
         <view class="nav-btn save-btn" @click="handleSave">
-          <u-loading-icon v-if="loading" color="#FF2442" size="16"></u-loading-icon>
+          <u-loading-icon v-if="loading" color="#E8A87C" size="16"></u-loading-icon>
           <text v-else class="save-text" :class="{ 'disabled': !hasChanges }">完成</text>
         </view>
       </view>
@@ -27,7 +27,7 @@
               class="avatar-img"
             />
             <view class="camera-badge">
-              <u-icon name="camera-fill" color="#ffffff" size="14"></u-icon>
+              <text class="camera-emoji">📷</text>
             </view>
             <view class="avatar-overlay">
               <text class="overlay-text">更换头像</text>
@@ -36,31 +36,30 @@
         </view>
 
         <!-- Form Section -->
-        <view class="form-section">
-          <!-- Nickname Group -->
+        <view class="form-card">
+          <!-- Nickname -->
           <view class="form-group">
-            <view class="group-header">
-              <text class="label">名字</text>
-              <text class="counter" :class="{ 'limit': form.nickname.length >= 20 }">{{ form.nickname.length }}/20</text>
+            <view class="form-row">
+              <text class="label">昵称</text>
+              <view class="input-area">
+                <input
+                  v-model="form.nickname"
+                  type="text"
+                  class="custom-input"
+                  placeholder="好名字可以让朋友更容易记住你"
+                  placeholder-class="input-placeholder"
+                  maxlength="20"
+                />
+              </view>
             </view>
-            <view class="input-wrapper">
-              <input
-                v-model="form.nickname"
-                type="text"
-                class="custom-input"
-                placeholder="好名字可以让朋友更容易记住你"
-                placeholder-class="input-placeholder"
-                maxlength="20"
-              />
-              <view class="input-line"></view>
-            </view>
+            <text class="counter" :class="{ 'limit': form.nickname.length >= 20 }">{{ form.nickname.length }}/20</text>
           </view>
 
-          <!-- Bio Group -->
+          <view class="form-divider"></view>
+
+          <!-- Bio -->
           <view class="form-group">
-            <view class="group-header">
-              <text class="label">简介</text>
-            </view>
+            <text class="label bio-label">简介</text>
             <view class="textarea-wrapper">
               <textarea
                 v-model="form.bio"
@@ -74,24 +73,34 @@
             </view>
           </view>
 
-          <!-- Gender Group (Mock) -->
-          <view class="form-item-row">
+          <view class="form-divider"></view>
+
+          <!-- Gender -->
+          <view class="form-row item-row">
             <text class="label">性别</text>
             <view class="value-display">
               <text class="value-text">保密</text>
-              <u-icon name="arrow-right" color="#cccccc" size="14"></u-icon>
+              <u-icon name="arrow-right" color="#D4C5B5" size="14"></u-icon>
             </view>
           </view>
-          
-          <!-- Birthday Group (Mock) -->
-          <view class="form-item-row">
+
+          <view class="form-divider"></view>
+
+          <!-- Birthday -->
+          <view class="form-row item-row">
             <text class="label">生日</text>
             <view class="value-display">
               <text class="value-text">去填写</text>
-              <u-icon name="arrow-right" color="#cccccc" size="14"></u-icon>
+              <u-icon name="arrow-right" color="#D4C5B5" size="14"></u-icon>
             </view>
           </view>
         </view>
+      </view>
+
+      <!-- 底部装饰 blob -->
+      <view class="bottom-blobs">
+        <view class="deco-blob deco-blob-1"></view>
+        <view class="deco-blob deco-blob-2"></view>
       </view>
     </scroll-view>
   </view>
@@ -282,27 +291,31 @@ const handleSave = async () => {
 </script>
 
 <style lang="scss" scoped>
-/* Variables */
-$primary-color: #FF2442;
-$text-main: #1a1a1a;
-$text-secondary: #999999;
-$border-color: #f5f5f5;
-$bg-color: #ffffff;
+/* 奶油极简色板 */
+$primary: #E8A87C;
+$primary-dark: #D4A574;
+$bg: #FFF8F0;
+$text-main: #3D2E1F;
+$text-secondary: #A89585;
+$text-light: #C4B5A5;
+$card-bg: #ffffff;
 
 .edit-profile-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: $bg-color;
+  background-color: $bg;
 }
 
-/* Navbar */
+/* 毛玻璃顶栏 */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 248, 240, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(232, 168, 124, 0.12);
 }
 
 .status-bar {
@@ -323,11 +336,11 @@ $bg-color: #ffffff;
   justify-content: center;
   height: 100%;
   min-width: 40px;
-  
+
   &.back-btn {
     justify-content: flex-start;
   }
-  
+
   &.save-btn {
     justify-content: flex-end;
   }
@@ -342,16 +355,16 @@ $bg-color: #ffffff;
 .save-text {
   font-size: 16px;
   font-weight: 600;
-  color: $primary-color;
+  color: $primary;
   transition: opacity 0.2s;
-  
+
   &.disabled {
     opacity: 0.3;
     pointer-events: none;
   }
 }
 
-/* Main Content */
+/* 滚动区 */
 .content-scroll {
   flex: 1;
   height: 0;
@@ -361,22 +374,22 @@ $bg-color: #ffffff;
   padding: 24px 20px 40px;
 }
 
-/* Avatar Section */
+/* 头像区 */
 .avatar-section {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .avatar-wrapper {
   position: relative;
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(232, 168, 124, 0.18);
+
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
     transition: transform 0.1s;
   }
 }
@@ -384,38 +397,43 @@ $bg-color: #ffffff;
 .avatar-img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  background-color: #f8f8f8;
-  border: 1px solid rgba(0,0,0,0.03);
+  border-radius: 20px;
+  background-color: #FFF0E6;
+  border: 3px solid #fff;
 }
 
 .camera-badge {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  background-color: $primary-color;
+  bottom: -4px;
+  right: -4px;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, $primary, $primary-dark);
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2.5px solid #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(255, 36, 66, 0.3);
+  box-shadow: 0 2px 8px rgba(232, 168, 124, 0.35);
   z-index: 2;
+}
+
+.camera-emoji {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .avatar-overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s;
-  
+
   .overlay-text {
     color: #fff;
     font-size: 12px;
@@ -427,11 +445,12 @@ $bg-color: #ffffff;
   opacity: 1;
 }
 
-/* Form Section */
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+/* 表单卡片 */
+.form-card {
+  background: $card-bg;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 2px 16px rgba(232, 168, 124, 0.08);
 }
 
 .form-group {
@@ -439,111 +458,132 @@ $bg-color: #ffffff;
   flex-direction: column;
 }
 
-.group-header {
+.form-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 500;
+  color: $text-main;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.bio-label {
   margin-bottom: 8px;
-  
-  .label {
-    font-size: 14px;
-    font-weight: 500;
-    color: $text-main;
-  }
-  
-  .counter {
-    font-size: 12px;
-    color: $text-secondary;
-    
-    &.limit {
-      color: $primary-color;
-    }
+}
+
+.input-area {
+  flex: 1;
+  margin-left: 12px;
+}
+
+.custom-input {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+  color: $text-main;
+  caret-color: $primary;
+}
+
+.counter {
+  font-size: 11px;
+  color: $text-light;
+  text-align: right;
+  margin-top: 4px;
+
+  &.limit {
+    color: $primary;
   }
 }
 
-.input-wrapper {
-  position: relative;
-  
-  .custom-input {
-    width: 100%;
-    height: 44px;
-    font-size: 16px;
-    color: $text-main;
-    caret-color: $primary-color;
-  }
-  
-  .input-line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: $border-color;
-    transition: background-color 0.2s;
-  }
-  
-  .custom-input:focus + .input-line {
-    background-color: $primary-color;
-    height: 1.5px;
-  }
+.form-divider {
+  height: 1px;
+  background: rgba(232, 168, 124, 0.12);
+  margin: 14px 0;
 }
 
 .textarea-wrapper {
-  background-color: #f9f9f9;
-  border-radius: 12px;
+  background-color: #FFF5ED;
+  border-radius: 14px;
   padding: 12px;
   position: relative;
   transition: background-color 0.2s;
-  
+
   &:focus-within {
-    background-color: #f5f5f5;
+    background-color: #FFF0E6;
   }
-  
+
   .custom-textarea {
     width: 100%;
     height: 80px;
     font-size: 15px;
     line-height: 1.5;
     color: $text-main;
-    caret-color: $primary-color;
+    caret-color: $primary;
   }
-  
+
   .textarea-counter {
     position: absolute;
     bottom: 8px;
     right: 12px;
     font-size: 11px;
-    color: $text-secondary;
+    color: $text-light;
   }
 }
 
 .input-placeholder {
-  color: #cccccc;
-  font-size: 15px;
+  color: $text-light;
+  font-size: 14px;
 }
 
-/* List Items */
-.form-item-row {
-  display: flex;
+/* 行项 */
+.item-row {
   justify-content: space-between;
-  align-items: center;
   padding: 4px 0;
-  
-  .label {
-    font-size: 15px;
-    font-weight: 500;
-    color: $text-main;
-  }
-  
+
   .value-display {
     display: flex;
     align-items: center;
     gap: 4px;
-    
+
     .value-text {
       font-size: 14px;
       color: $text-secondary;
     }
   }
+}
+
+/* 底部装饰 blob */
+.bottom-blobs {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.deco-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.3;
+}
+
+.deco-blob-1 {
+  width: 120px;
+  height: 120px;
+  background: #F8D5D0;
+  bottom: -30px;
+  left: 20px;
+}
+
+.deco-blob-2 {
+  width: 90px;
+  height: 90px;
+  background: #D5ECD4;
+  bottom: -10px;
+  right: 40px;
 }
 </style>

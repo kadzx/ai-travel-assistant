@@ -1,214 +1,124 @@
 <template>
-  <view class="container min-h-screen bg-[#F6F7F9] pb-20 relative">
-    <!-- Immersive Header Background -->
-    <view class="absolute top-0 left-0 right-0 h-64 z-0 overflow-hidden">
-      <!-- Background Image -->
-      <image
-        src="https://picsum.photos/800/600?blur=4"
-        mode="aspectFill"
-        class="w-full h-full transform scale-105"
-      />
-      <!-- Gradient Overlay -->
+  <view class="profile-page">
+    <!-- Hero Section with wave clip -->
+    <view class="hero-section">
+      <view class="hero-bg"></view>
+      <!-- SVG Wave -->
+      <view class="hero-wave">
+        <svg viewBox="0 0 375 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <path d="M0,20 Q93.75,40 187.5,20 Q281.25,0 375,20 L375,40 L0,40 Z" fill="#FFF8F0"/>
+        </svg>
+      </view>
+      <!-- Avatar + Info -->
+      <view class="hero-content">
+        <view class="avatar-wrap">
+          <image
+            :src="headerAvatarSrc"
+            mode="aspectFill"
+            class="avatar-img"
+            @error="onHeaderAvatarError"
+          />
+        </view>
+        <text class="nickname">{{ userStore.userInfo?.username || '未登录' }}</text>
+        <text class="bio">{{ userStore.userInfo?.bio || '✨ 热爱生活，分享美好' }}</text>
+        <view class="edit-btn" @click="goToEditProfile">
+          <text class="edit-btn-text">编辑资料</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Stats Card (overlapping hero) -->
+    <view class="stats-card">
+      <view class="stat-item">
+        <text class="stat-num">{{ userStore.userInfo?.stats?.receivedLikesCount ?? 0 }}</text>
+        <text class="stat-label">帖子</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">{{ userStore.userInfo?.stats?.receivedLikesCount ?? 0 }}</text>
+        <text class="stat-label">获赞</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">{{ userStore.userInfo?.stats?.followingCount ?? 0 }}</text>
+        <text class="stat-label">关注</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">{{ userStore.userInfo?.stats?.followerCount ?? 0 }}</text>
+        <text class="stat-label">粉丝</text>
+      </view>
+    </view>
+
+    <!-- Function Entry List -->
+    <view class="func-card">
+      <view class="func-item" @click="goToItinerary">
+        <view class="func-icon" style="background: #FFF0E6;">
+          <text class="func-emoji">📋</text>
+        </view>
+        <text class="func-name">我的行程</text>
+        <view class="func-right">
+          <view class="func-badge" v-if="userStore.userInfo?.stats?.postsCount">
+            <text class="func-badge-text">{{ userStore.userInfo?.stats?.postsCount }}</text>
+          </view>
+          <u-icon name="arrow-right" size="16" color="#C4C4C4"></u-icon>
+        </view>
+      </view>
+      <view class="func-divider"></view>
+      <view class="func-item" @click="goToPublicHome">
+        <view class="func-icon" style="background: #E8F4FD;">
+          <text class="func-emoji">👁</text>
+        </view>
+        <text class="func-name">查看主页</text>
+        <view class="func-right">
+          <u-icon name="arrow-right" size="16" color="#C4C4C4"></u-icon>
+        </view>
+      </view>
+      <view class="func-divider"></view>
+      <view class="func-item">
+        <view class="func-icon" style="background: #F0F0F0;">
+          <text class="func-emoji">⚙️</text>
+        </view>
+        <text class="func-name">设置</text>
+        <view class="func-right">
+          <u-icon name="arrow-right" size="16" color="#C4C4C4"></u-icon>
+        </view>
+      </view>
+    </view>
+
+    <!-- Tab Bar (capsule style) -->
+    <view class="tab-bar">
       <view
-        class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#F6F7F9]"
-      ></view>
-    </view>
-
-    <!-- Header / User Info（无顶栏，预留安全区） -->
-    <view class="relative z-10 px-4 pt-safe pb-4">
-      <!-- User Card -->
-      <view class="bg-white rounded-[24px] p-5 shadow-float mb-4">
-        <view class="flex items-center justify-between mb-4">
-          <view class="flex items-center gap-3">
-            <view class="w-[40px] h-[40px] flex-shrink-0">
-              <image
-                :src="headerAvatarSrc"
-                mode="aspectFill"
-                class="w-[40px] h-[40px] rounded-full border-[3px] border-white shadow-lg bg-white"
-                @error="onHeaderAvatarError"
-              />
-            </view>
-
-            <view>
-              <text class="text-xl font-extrabold text-gray-900 block mb-0.5">{{
-                userStore.userInfo?.username || "未登录"
-              }}</text>
-              <text class="text-xs text-gray-400 font-mono"
-                >ID: {{ userStore.userInfo?.id || "888888" }}</text
-              >
-            </view>
-          </view>
-
-          <view class="flex gap-3">
-            <view
-              class="w-[40px] h-[40px] rounded-full bg-gray-50 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100"
-            >
-              <u-icon name="share-square" size="18" color="#333"></u-icon>
-            </view>
-            <view
-              class="w-[40px] h-[40px] rounded-full bg-gray-50 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100"
-            >
-              <u-icon name="setting" size="18" color="#333"></u-icon>
-            </view>
-          </view>
-        </view>
-
-        <!-- Bio -->
-        <text class="text-[13px] text-gray-600 leading-relaxed mb-5 block px-1">
-          {{
-            userStore.userInfo?.bio ||
-            "✨ 热爱生活，分享美好。\n📷 摄影 | ✈️ 旅行 | 🥘 美食"
-          }}
-        </text>
-
-        <!-- Stats：对接后端 stats -->
-        <view
-          class="flex items-center justify-around py-2 border-t border-gray-50"
-        >
-          <view
-            class="flex flex-col items-center group active:opacity-70 transition-opacity"
-          >
-            <text class="text-lg font-bold text-gray-900 font-din">{{ userStore.userInfo?.stats?.followingCount ?? 0 }}</text>
-            <text class="text-xs text-gray-400 mt-0.5 font-medium">关注</text>
-          </view>
-          <view class="w-[1px] h-4 bg-gray-100"> </view>
-          <view
-            class="flex flex-col items-center group active:opacity-70 transition-opacity"
-          >
-            <text class="text-lg font-bold text-gray-900 font-din">{{ userStore.userInfo?.stats?.followerCount ?? 0 }}</text>
-            <text class="text-xs text-gray-400 mt-0.5 font-medium">粉丝</text>
-          </view>
-          <view class="w-[1px] h-4 bg-gray-100"> </view>
-          <view
-            class="flex flex-col items-center group active:opacity-70 transition-opacity"
-          >
-            <text class="text-lg font-bold text-gray-900 font-din">{{ userStore.userInfo?.stats?.receivedLikesCount ?? 0 }}</text>
-            <text class="text-xs text-gray-400 mt-0.5 font-medium">获赞与收藏</text>
-          </view>
-        </view>
-
-        <!-- 我的行程入口（小红书风格） -->
-        <view
-          class="mt-4 rounded-2xl bg-gradient-to-r from-[#FFF5F5] to-[#FFE8E8] border border-[#FFE0E0] p-4 flex items-center justify-between active:scale-[0.99] transition-transform"
-          @click="goToItinerary"
-        >
-          <view class="flex items-center gap-3">
-            <view class="w-10 h-10 rounded-xl bg-[#FF2442]/10 flex items-center justify-center">
-              <u-icon name="map" size="22" color="#FF2442"></u-icon>
-            </view>
-            <view>
-              <text class="text-[15px] font-bold text-gray-900 block">我的行程</text>
-              <text class="text-[12px] text-gray-500">AI 生成的旅行计划</text>
-            </view>
-          </view>
-          <u-icon name="arrow-right" size="18" color="#999"></u-icon>
-        </view>
-
-        <!-- Action Buttons -->
-        <view class="flex gap-3 mt-6">
-          <view
-            class="flex-1 bg-[#FF2442] flex items-center justify-center shadow-lg shadow-[#FF2442]/20 active:scale-[0.98] transition-all"
-            style="height: 56px; border-radius: 20px"
-            @click="goToEditProfile"
-          >
-            <text class="text-white text-[18px] font-bold tracking-wide"
-              >编辑资料</text
-            >
-          </view>
-          <view
-            class="flex-1 bg-gray-50 border border-gray-200 flex items-center justify-center active:bg-gray-100 transition-colors"
-            style="height: 56px; border-radius: 20px"
-            @click="goToPublicHome"
-          >
-            <text class="text-gray-800 text-[18px] font-bold tracking-wide"
-              >查看主页</text
-            >
-          </view>
-        </view>
+        v-for="(tab, index) in tabsDisplay"
+        :key="index"
+        class="tab-item"
+        :class="{ 'tab-active': currentTab === index }"
+        @click="switchTab(index)"
+      >
+        <text class="tab-text" :class="{ 'tab-text-active': currentTab === index }">{{ tab }}</text>
       </view>
     </view>
 
-    <!-- Content Tabs -->
-    <view
-      class="sticky top-0 z-20 bg-[#F6F7F9]/95 backdrop-blur-xl border-b border-gray-200/50"
-    >
-      <view class="flex justify-around px-4">
-        <view
-          v-for="(tab, index) in tabs"
-          :key="index"
-          class="relative py-3 px-2 flex flex-col items-center transition-all h-12 justify-center"
-          @click="switchTab(index)"
-        >
-          <text
-            class="text-[14px] transition-all duration-300"
-            :class="
-              currentTab === index
-                ? 'text-gray-900 font-bold scale-110'
-                : 'text-gray-400 font-medium'
-            "
-          >
-            {{ tab.name }}
-          </text>
-          <view
-            class="absolute bottom-1 w-4 h-1 bg-[#FF2442] rounded-full transition-all duration-300 transform origin-center"
-            :class="
-              currentTab === index
-                ? 'scale-x-100 opacity-100'
-                : 'scale-x-0 opacity-0'
-            "
-          ></view>
-        </view>
-      </view>
-    </view>
-
-    <!-- Grid Content (Waterfall Mock) -->
-    <view class="p-2 min-h-[300px]">
-      <view v-if="postList.length > 0" class="flex flex-wrap">
+    <!-- Content: Waterfall Posts -->
+    <view class="content-area">
+      <view v-if="postList.length > 0" class="waterfall">
         <view
           v-for="(item, index) in postList"
           :key="item.id"
-          class="w-1/2 p-1.5 box-border"
+          class="waterfall-item"
           @click="goToDetail(item.id)"
         >
-          <view
-            class="bg-white rounded-xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-200 h-full flex flex-col"
-          >
+          <view class="post-card">
             <image
-              :src="
-                getDisplayImageUrl(item.image) || `https://picsum.photos/300/400?random=${index}`
-              "
+              :src="getDisplayImageUrl(item.image) || `https://picsum.photos/300/400?random=${index}`"
               mode="aspectFill"
-              class="w-full h-48 bg-gray-100 block"
+              class="post-img"
             />
-            <view class="p-2.5 flex-1 flex flex-col justify-between">
-              <text
-                class="text-[13px] text-gray-800 line-clamp-2 font-medium mb-2 leading-snug"
-                >{{ item.title }}</text
-              >
-              <view class="flex items-center justify-between">
-                <view class="flex items-center gap-1.5">
-                  <image
-                    :src="item.user?.avatar || '/static/logo.png'"
-                    class="w-[32px] h-[32px] rounded-full flex-shrink-0 bg-gray-100"
-                    mode="aspectFill"
-                  />
-                  <text
-                    class="text-[10px] text-gray-500 line-clamp-1 max-w-[60px]"
-                    >{{ item.user?.name || "用户" }}</text
-                  >
-                </view>
-                <view class="flex items-center gap-1">
-                  <u-icon
-                    :name="item.isLiked ? 'heart-fill' : 'heart'"
-                    size="14"
-                    :color="item.isLiked ? '#FF2442' : '#cbd5e1'"
-                  ></u-icon>
-                  <text
-                    class="text-xs"
-                    :class="item.isLiked ? 'text-[#FF2442]' : 'text-gray-400'"
-                    >{{ item.likes || 0 }}</text
-                  >
-                </view>
+            <view class="post-info">
+              <text class="post-title">{{ item.title }}</text>
+              <view class="post-bottom">
+                <text class="post-like-icon">❤️</text>
+                <text class="post-like-num">{{ item.likes || 0 }}</text>
               </view>
             </view>
           </view>
@@ -216,23 +126,20 @@
       </view>
 
       <!-- Empty State -->
-      <view
-        v-else
-        class="flex flex-col items-center justify-center py-20 animate-fade-in"
-      >
-        <view
-          class="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-4"
-        >
-          <u-icon name="empty-data" size="48" color="#d1d5db"></u-icon>
+      <view v-else class="empty-state">
+        <view class="empty-icon-wrap">
+          <u-icon name="empty-data" size="48" color="#E8A87C"></u-icon>
         </view>
-        <text class="text-gray-400 text-sm font-medium">这里空空如也</text>
-        <view
-          class="mt-6 px-8 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-gray-600 font-bold shadow-sm active:scale-95 transition-transform"
-        >
-          去发现更多精彩
-        </view>
+        <text class="empty-text">这里空空如也</text>
+        <view class="empty-btn" @click="uni.switchTab({url:'/pages/index/index'})">去发现更多精彩</view>
       </view>
     </view>
+
+    <!-- 自定义 TabBar -->
+    <custom-tabbar current="/pages/user/profile" />
+
+    <!-- Bottom Spacer -->
+    <view style="height: 80px;"></view>
   </view>
 </template>
 
@@ -264,6 +171,8 @@ const tabs = [
   { name: "收藏", type: "favorites" },
   { name: "赞过", type: "likes" },
 ];
+
+const tabsDisplay = ["📝 笔记", "⭐ 收藏", "❤️ 赞过"];
 
 const loadData = async () => {
   try {
@@ -338,8 +247,333 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.pt-safe {
-  padding-top: calc(24px + constant(safe-area-inset-top));
-  padding-top: calc(24px + env(safe-area-inset-top));
+.profile-page {
+  min-height: 100vh;
+  background-color: #FFF8F0;
+  position: relative;
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+}
+
+/* ===== Hero Section ===== */
+.hero-section {
+  position: relative;
+  height: 35vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #FFF8F0 0%, #FFF0E6 100%);
+}
+
+.hero-wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  line-height: 0;
+  svg {
+    width: 100%;
+    height: 40px;
+    display: block;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: 36px;
+}
+
+.avatar-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.nickname {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.bio {
+  font-size: 13px;
+  color: #8C8C8C;
+  margin-bottom: 12px;
+}
+
+.edit-btn {
+  padding: 6px 24px;
+  background: #fff;
+  border: 1.5px solid #E8A87C;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn-text {
+  font-size: 13px;
+  color: #E8A87C;
+  font-weight: 600;
+}
+
+/* ===== Stats Card ===== */
+.stats-card {
+  margin: -24px 16px 20px;
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 20px;
+  background: #F0F0F0;
+}
+
+/* ===== Tab Bar ===== */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  margin: 0 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #F5F0EB;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+}
+
+.tab-active {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.tab-text {
+  font-size: 13px;
+  color: #999;
+  font-weight: 500;
+  transition: color 0.25s ease;
+}
+
+.tab-text-active {
+  color: #E8A87C;
+  font-weight: 600;
+}
+
+/* ===== Content Area ===== */
+.content-area {
+  padding: 8px;
+  min-height: 200px;
+}
+
+.waterfall {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.waterfall-item {
+  width: 50%;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.post-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+}
+
+.post-img {
+  width: 100%;
+  height: 180px;
+  display: block;
+  background: #F5F0EB;
+}
+
+.post-info {
+  padding: 8px 10px 10px;
+}
+
+.post-title {
+  font-size: 13px;
+  color: #3D3D3D;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.post-bottom {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.post-like-icon {
+  font-size: 12px;
+}
+
+.post-like-num {
+  font-size: 12px;
+  color: #E8A87C;
+  font-weight: 500;
+}
+/* ===== Empty State ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.empty-icon-wrap {
+  width: 100px;
+  height: 100px;
+  background: #FFF0E6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 20px;
+}
+
+.empty-btn {
+  padding: 8px 28px;
+  background: #fff;
+  border: 1.5px solid #E8A87C;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #E8A87C;
+  font-weight: 600;
+}
+
+/* ===== Function Entry Card ===== */
+.func-card {
+  margin: 16px 16px 24px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 4px 0;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+}
+
+.func-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.func-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.func-emoji {
+  font-size: 18px;
+}
+
+.func-name {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+}
+
+.func-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.func-badge {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: #FFF0E6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+.func-badge-text {
+  font-size: 12px;
+  color: #E8A87C;
+  font-weight: 600;
+}
+
+.func-divider {
+  height: 1px;
+  background: #F5F0EB;
+  margin: 0 16px 0 64px;
 }
 </style>

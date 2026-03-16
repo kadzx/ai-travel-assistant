@@ -10,14 +10,15 @@
 			"path": "pages/welcome/welcome",
 			"style": {
 				"navigationBarTitleText": "",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
 		{
 			"path": "pages/login/login",
 			"style": {
-				"navigationBarTitleText": "登录 / 注册"
+				"navigationBarTitleText": "登录 / 注册",
+				"navigationBarBackgroundColor": "#FFF8F0"
 			}
 		},
 		{
@@ -36,7 +37,9 @@
 		{
 			"path": "pages/chat/chat",
 			"style": {
-				"navigationBarTitleText": "AI 助手"
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"disableScroll": true
 			}
 		},
 		{
@@ -51,8 +54,9 @@
 		{
 			"path": "pages/post/detail",
 			"style": {
-				"navigationBarTitleText": "笔记详情",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -61,7 +65,7 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "发布笔记",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -69,14 +73,16 @@
 			"path": "pages/user/edit",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "编辑资料"
+				"navigationBarTitleText": "编辑资料",
+				"navigationBarBackgroundColor": "#FFF8F0"
 			}
 		},
 		{
 			"path": "pages/search/search",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "搜索",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -85,7 +91,7 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "通知",
-				"navigationBarBackgroundColor": "#F6F7F9",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -94,7 +100,7 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "我的行程",
-				"navigationBarBackgroundColor": "#F6F7F9",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -103,7 +109,7 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "行程详情",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		},
@@ -112,7 +118,7 @@
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "用户主页",
-				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
 		}
@@ -120,14 +126,15 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "AI Travel",
-		"navigationBarBackgroundColor": "#FFFFFF",
-		"backgroundColor": "#F8F8F8"
+		"navigationBarBackgroundColor": "#FFF8F0",
+		"backgroundColor": "#FFF8F0"
 	},
 	"tabBar": {
-		"color": "#909399",
-		"selectedColor": "#FF2442",
+		"custom": true,
+		"color": "#BFBFBF",
+		"selectedColor": "#E8A87C",
 		"backgroundColor": "#FFFFFF",
-		"borderStyle": "black",
+		"borderStyle": "white",
 		"list": [
 			{
 				"pagePath": "pages/index/index",

@@ -72,6 +72,14 @@ export function deleteItineraryNode(id: string | number, nodeId: string) {
   });
 }
 
+// 删除整个行程
+export function deleteItinerary(id: string | number) {
+  return request({
+    url: `${BASE}/${id}`,
+    method: 'DELETE'
+  });
+}
+
 // 节点重排
 export function reorderItineraryNodes(id: string | number, orders: Array<{ nodeId: string; dayIndex: number; sequence: number }>) {
   return request({

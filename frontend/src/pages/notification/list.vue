@@ -1,20 +1,20 @@
 <template>
-  <view class="min-h-screen bg-[#F6F7F9] flex flex-col">
-    <!-- 小红书风格顶栏 -->
-    <view class="sticky top-0 z-10 bg-[#F6F7F9]/95 border-b border-gray-200/50">
+  <view class="min-h-screen bg-[#FFF8F0] flex flex-col">
+    <!-- 毛玻璃顶栏 -->
+    <view class="sticky top-0 z-50 bg-[#FFF8F0]/80 backdrop-blur-2xl">
       <view class="h-[var(--status-bar-height)]"></view>
       <view class="px-4 py-3 flex items-center justify-between">
-        <view class="w-10 h-10 flex items-center justify-center active:opacity-70" @click="goBack">
-          <u-icon name="arrow-left" size="22" color="#333"></u-icon>
+        <view class="w-10 h-10 flex items-center justify-center rounded-full bg-white/60 active:bg-white/80" @click="goBack">
+          <text class="text-[18px]">←</text>
         </view>
-        <text class="text-[17px] font-bold text-gray-900">通知</text>
-        <view class="flex items-center gap-2">
+        <text class="text-[17px] font-bold text-gray-800">通知</text>
+        <view class="flex items-center">
           <text
             v-if="list.length > 0"
-            class="text-[13px] text-[#FF2442] font-medium"
+            class="text-[13px] text-[#E8A87C] font-medium"
             @click="handleMarkAllRead"
           >全部已读</text>
-          <view class="w-10 h-10"></view>
+          <view v-else class="w-14"></view>
         </view>
       </view>
     </view>
@@ -25,50 +25,74 @@
       @scrolltolower="loadMore"
       :lower-threshold="80"
     >
+      <!-- Loading -->
       <view v-if="loading && list.length === 0" class="flex justify-center py-20">
-        <u-loading-icon mode="circle"></u-loading-icon>
+        <u-loading-icon mode="circle" color="#E8A87C"></u-loading-icon>
       </view>
 
-      <view v-else-if="list.length === 0" class="flex flex-col items-center justify-center py-20 px-6">
-        <view class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-          <u-icon name="bell" size="40" color="#d1d5db"></u-icon>
+      <!-- 空状态 -->
+      <view v-else-if="list.length === 0" class="flex flex-col items-center justify-center py-24 px-6">
+        <view class="w-20 h-20 rounded-full bg-[#F5F0EB] flex items-center justify-center mb-4">
+          <text class="text-[36px]">🔔</text>
         </view>
-        <text class="text-gray-500 text-[15px] text-center">暂无通知</text>
-        <text class="text-gray-400 text-[13px] mt-2 text-center">点赞、评论、关注会在这里出现</text>
+        <text class="text-gray-500 text-[15px]">暂无通知</text>
+        <text class="text-gray-400 text-[13px] mt-2">互动消息会在这里出现</text>
       </view>
 
+      <!-- 通知列表 -->
       <view v-else class="px-3 py-4">
         <view
           v-for="item in list"
           :key="item.id"
-          class="noti-card rounded-2xl bg-white shadow-sm mb-3 overflow-hidden flex items-center gap-3 p-4 active:scale-[0.99] transition-transform"
-          :class="{ 'opacity-80': item.read_at }"
+          class="noti-card bg-white mb-3 overflow-hidden flex items-center gap-3 p-4 active:scale-[0.99] transition-all"
+          :class="{ 'noti-read': item.read_at }"
           @click="handleItemClick(item)"
         >
-          <image
-            :src="item.actor?.avatar || '/static/logo.png'"
-            mode="aspectFill"
-            class="rounded-full flex-shrink-0 bg-gray-100"
-            style="width: 72rpx; height: 72rpx;"
-          />
-          <view class="flex-1 min-w-0 flex flex-col justify-center">
-            <view class="flex items-center gap-2 flex-wrap">
-              <text class="text-[15px] font-bold text-gray-900">{{ item.actor?.nickname || item.actor?.username || '用户' }}</text>
-              <text class="text-[14px] text-gray-600">{{ typeText(item.type) }}</text>
+          <!-- 未读小圆点 -->
+          <view v-if="!item.read_at" class="unread-dot w-2 h-2 rounded-full bg-[#E8A87C] flex-shrink-0 self-start mt-4"></view>
+          <view v-else class="w-2 flex-shrink-0"></view>
+
+          <!-- 头像 + 类型图标 -->
+          <view class="relative flex-shrink-0">
+            <image
+              :src="item.actor?.avatar || '/static/logo.png'"
+              mode="aspectFill"
+              class="rounded-full bg-[#F5F0EB]"
+              style="width: 80rpx; height: 80rpx;"
+            />
+            <view class="type-badge absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px]"
+              :class="typeBadgeClass(item.type)"
+            >
+              {{ typeEmoji(item.type) }}
             </view>
-            <text v-if="item.extra?.contentSnippet" class="text-[13px] text-gray-500 mt-1 block line-clamp-2">{{ item.extra.contentSnippet }}</text>
-            <text v-if="item.extra?.title && item.type === 'comment'" class="text-[12px] text-gray-400 mt-0.5 block">帖子：{{ item.extra.title }}</text>
-            <text class="text-[11px] text-gray-400 mt-2 block">{{ formatTime(item.created_at) }}</text>
           </view>
-          <view v-if="!item.read_at" class="w-2 h-2 rounded-full bg-[#FF2442] flex-shrink-0"></view>
+
+          <!-- 内容区 -->
+          <view class="flex-1 min-w-0 flex flex-col justify-center">
+            <view class="flex items-center gap-1.5 flex-wrap">
+              <text class="text-[14px] font-bold text-gray-800">{{ item.actor?.nickname || item.actor?.username || '用户' }}</text>
+              <text class="text-[13px] text-gray-500">{{ typeText(item.type) }}</text>
+            </view>
+            <text v-if="item.extra?.contentSnippet" class="text-[12px] text-gray-400 mt-1 block line-clamp-2">{{ item.extra.contentSnippet }}</text>
+            <text v-if="item.extra?.title && item.type === 'comment'" class="text-[11px] text-gray-400 mt-0.5 block">帖子：{{ item.extra.title }}</text>
+            <text class="text-[11px] text-gray-300 mt-1.5 block">{{ formatTime(item.created_at) }}</text>
+          </view>
+
+          <!-- 右侧缩略图 -->
+          <image
+            v-if="item.extra?.coverImage"
+            :src="item.extra.coverImage"
+            mode="aspectFill"
+            class="w-[44px] h-[44px] rounded-xl flex-shrink-0 bg-[#F5F0EB]"
+          />
         </view>
       </view>
 
       <view class="py-4 flex justify-center">
         <u-loadmore
           :status="loadStatus"
-          lineColor="#E5E7EB"
-          color="#9CA3AF"
+          lineColor="#F5F0EB"
+          color="#C4A882"
           fontSize="12"
           :icon="true"
         />
@@ -95,6 +119,20 @@ function typeText(type: string) {
     follow: '关注了你'
   };
   return map[type] || type;
+}
+
+function typeEmoji(type: string) {
+  const map: Record<string, string> = { like: '❤️', comment: '💬', follow: '👤' };
+  return map[type] || '📌';
+}
+
+function typeBadgeClass(type: string) {
+  const map: Record<string, string> = {
+    like: 'bg-[#FFF0E8]',
+    comment: 'bg-[#EBF0F7]',
+    follow: 'bg-[#EBF5EF]'
+  };
+  return map[type] || 'bg-gray-100';
 }
 
 function formatTime(str: string) {
@@ -187,6 +225,23 @@ onShow(async () => {
 </script>
 
 <style scoped>
+.noti-card {
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.noti-read {
+  opacity: 0.7;
+}
+
+.unread-dot {
+  box-shadow: 0 0 6px rgba(232, 168, 124, 0.5);
+}
+
+.type-badge {
+  border: 2px solid white;
+}
+
 .line-clamp-2 {
   overflow: hidden;
   text-overflow: ellipsis;

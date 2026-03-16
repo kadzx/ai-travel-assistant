@@ -304,16 +304,30 @@ class ItineraryService {
     return itinerary.toJSON();
   }
 
-  async deleteNode(userId, id, nodeId) {
+  async deleteItinerary(userId, id) {
     const itinerary = await Itinerary.findOne({ where: { id, user_id: userId } });
     if (!itinerary) return null;
+    await itinerary.destroy();
+    return true;
+  }
+
+  async deleteNode(userId, id, nodeId) {
+    const itinerary = await Itinerary.findOne({ where: { id, user_id: userId } });
+    if (!itinerary) {
+      console.log('[deleteNode] itinerary not found, id:', id, 'userId:', userId);
+      return null;
+    }
     const content = normalizeLinearContent(itinerary.content, {
       startDate: itinerary.start_date,
       endDate: itinerary.end_date
     });
     const before = content.nodes.length;
+    console.log('[deleteNode] nodeId:', nodeId, 'existing ids:', content.nodes.map(n => n.id));
     content.nodes = content.nodes.filter(node => String(node.id) !== String(nodeId));
-    if (content.nodes.length === before) return null;
+    if (content.nodes.length === before) {
+      console.log('[deleteNode] no node matched');
+      return null;
+    }
     content.nodes = normalizeNodes(content.nodes);
     content.summary = {
       totalDays: Math.max(1, ...content.nodes.map(n => n.dayIndex), 1),

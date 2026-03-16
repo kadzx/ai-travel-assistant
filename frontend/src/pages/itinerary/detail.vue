@@ -1,135 +1,208 @@
 <template>
-  <view class="page min-h-screen bg-[#F6F7F9] flex flex-col">
-    <view class="sticky top-0 z-20 bg-[#F6F7F9]/95 border-b border-black/5">
-      <view class="h-[var(--status-bar-height)]"></view>
-      <view class="px-4 py-3 flex items-center justify-between">
-        <view class="w-10 h-10 flex items-center justify-center active:opacity-70" @click="goBack">
-          <u-icon name="arrow-left" size="22" color="#333"></u-icon>
-        </view>
-        <text class="text-[17px] font-bold text-[#1A1A1A]">线性行程</text>
-        <view class="w-10 h-10 flex items-center justify-center" @click="openCreateNode">
-          <u-icon name="plus" size="22" color="#FF2442"></u-icon>
-        </view>
-      </view>
-    </view>
-
-    <view v-if="loading" class="flex-1 flex items-center justify-center">
-      <u-loading-icon mode="circle"></u-loading-icon>
-    </view>
-
-    <scroll-view v-else scroll-y class="flex-1 px-3 py-3 box-border">
-      <view class="rounded-2xl bg-white p-4 border border-black/5 mb-3">
-        <text class="text-[18px] font-bold text-[#1A1A1A]">{{ itineraryTitle }}</text>
-        <view class="mt-2 flex items-center gap-2 text-[12px] text-[#666]">
-          <text>{{ linearContent.destination || '未设置目的地' }}</text>
-          <text>·</text>
-          <text>{{ dayCount }} 天</text>
-          <text>·</text>
-          <text>{{ nodeCount }} 个节点</text>
-        </view>
-      </view>
-
-      <view v-if="dayGroups.length === 0" class="rounded-2xl bg-white p-6 text-center border border-black/5">
-        <text class="text-[#999] text-[14px]">暂无节点，点击右上角加号添加</text>
-      </view>
-
-      <view v-for="group in dayGroups" :key="group.dayIndex" class="mb-4">
-        <view class="mb-2 px-1 flex items-center justify-between">
-          <text class="text-[15px] font-bold text-[#1A1A1A]">Day {{ group.dayIndex }}</text>
-          <view class="px-2 py-1 rounded-full bg-[#FF2442]/10">
-            <text class="text-[11px] text-[#FF2442]">{{ group.nodes.length }} 节点</text>
+  <view class="page">
+    <!-- 毛玻璃顶栏 -->
+    <view class="top-bar">
+      <view class="top-bar-inner">
+        <view class="h-[var(--status-bar-height)]"></view>
+        <view class="bar-row">
+          <view class="bar-btn" @click="goBack">
+            <u-icon name="arrow-left" size="20" color="#5A5A5A"></u-icon>
+          </view>
+          <text class="bar-title">{{ itineraryTitle }}</text>
+          <view class="bar-right">
+            <view class="bar-btn" @click="openCreateNode">
+              <u-icon name="edit-pen" size="19" color="#95B8A3"></u-icon>
+            </view>
+            <view class="bar-btn delete-bar-btn" @click="confirmDeleteItinerary">
+              <text style="font-size: 18px;">🗑</text>
+            </view>
           </view>
         </view>
+      </view>
+    </view>
 
+    <!-- Loading -->
+    <view v-if="loading" class="loading-wrap">
+      <u-loading-icon mode="circle" color="#95B8A3"></u-loading-icon>
+    </view>
+
+    <scroll-view v-else scroll-y class="main-scroll">
+      <!-- Hero 封面区 -->
+      <view class="hero-card">
+        <view class="hero-inner">
+          <view class="hero-text">
+            <text class="hero-dest">{{ linearContent.destination || '未设置目的地' }}</text>
+            <text class="hero-date">{{ linearContent.startDate || '' }} {{ linearContent.endDate ? '— ' + linearContent.endDate : '' }}</text>
+          </view>
+          <view class="hero-badge">
+            <text class="hero-badge-text">{{ dayCount }}天</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 统计卡片行 -->
+      <view class="stats-row">
+        <view class="stat-card">
+          <text class="stat-num">{{ dayCount }}</text>
+          <text class="stat-label">天数</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-num">{{ nodeCount }}</text>
+          <text class="stat-label">景点数</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-num">¥{{ totalBudget }}</text>
+          <text class="stat-label">预算</text>
+        </view>
+      </view>
+
+      <!-- Day 切换标签栏 -->
+      <scroll-view v-if="dayGroups.length > 0" scroll-x class="day-tabs-scroll">
+        <view class="day-tabs">
+          <view
+            v-for="group in dayGroups"
+            :key="group.dayIndex"
+            class="day-tab"
+            :class="{ active: activeDay === group.dayIndex }"
+            @click="activeDay = group.dayIndex"
+          >
+            <text>Day {{ group.dayIndex }}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 空状态 -->
+      <view v-if="dayGroups.length === 0" class="empty-state">
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">暂无景点，点击下方添加</text>
+      </view>
+
+      <!-- 时间线布局 -->
+      <view v-for="group in filteredDayGroups" :key="group.dayIndex" class="timeline-section">
         <view
           v-for="(node, index) in group.nodes"
           :key="node.id"
-          class="bg-white rounded-2xl p-3 border border-black/5 mb-2 shadow-sm"
+          class="timeline-item"
         >
-          <view class="flex items-start justify-between">
-            <view class="pr-2">
-              <view class="flex items-center gap-2">
-                <text class="text-[12px] text-[#666]">{{ node.timeSlot || '待定时间' }}</text>
-                <view class="status-badge" :class="`status-${node.status}`">
-                  <text>{{ statusText(node.status) }}</text>
-                </view>
+          <!-- 左侧时间线 -->
+          <view class="timeline-left">
+            <view class="timeline-dot" :style="{ background: getTimeColor(node.timeSlot) }"></view>
+            <view v-if="index < group.nodes.length - 1" class="timeline-line" :style="{ background: getTimeColor(node.timeSlot) }"></view>
+          </view>
+          <!-- 右侧卡片 -->
+          <view class="timeline-card" :class="{ 'is-done': node.status === 'done' }">
+            <view class="card-header">
+              <view class="time-tag" :style="{ background: getTimeColor(node.timeSlot) + '18', color: getTimeColor(node.timeSlot) }">
+                {{ node.timeSlot || '待定' }}
               </view>
-              <text class="mt-1 block text-[16px] font-semibold text-[#1A1A1A]">{{ node.title }}</text>
-              <text class="mt-1 block text-[13px] text-[#666]">{{ node.location || '未填写地点' }}</text>
-              <text class="mt-1 block text-[12px] text-[#999]">
-                交通 {{ node.transport || '待定' }} · 预算 ¥{{ node.cost || 0 }}
-              </text>
-              <text v-if="node.notes" class="mt-1 block text-[12px] text-[#666]">{{ node.notes }}</text>
+              <view v-if="node.status === 'done'" class="done-check">✓</view>
             </view>
-            <view class="flex flex-col gap-1 shrink-0">
-              <view class="op-btn" @click="openEditNode(node)">编辑</view>
-              <view class="op-btn" @click="moveNode(node, -1)">上移</view>
-              <view class="op-btn" @click="moveNode(node, 1)">下移</view>
-              <view class="op-btn danger" @click="removeNode(node)">删除</view>
+            <text class="card-title" :class="{ 'line-through': node.status === 'done' }">{{ node.title }}</text>
+            <text class="card-desc">{{ node.location || '未填写地点' }}</text>
+            <text v-if="node.notes" class="card-notes">{{ node.notes }}</text>
+            <view class="card-footer">
+              <view v-if="node.transport" class="transport-tag" :style="getTransportStyle(node.transport)">
+                {{ getTransportEmoji(node.transport) }} {{ node.transport }}
+              </view>
+              <text class="card-budget">💰 ¥{{ node.cost || 0 }}</text>
+            </view>
+            <!-- 操作按钮 -->
+            <view class="card-actions">
+              <view class="action-btn" @click="openEditNode(node)">编辑</view>
+              <view class="action-btn" @click="moveNode(node, -1)">↑</view>
+              <view class="action-btn" @click="moveNode(node, 1)">↓</view>
+              <view class="action-btn danger" @click="removeNode(node)">删除</view>
             </view>
           </view>
         </view>
       </view>
+
+      <!-- 添加景点按钮 -->
+      <view class="add-spot-btn" @click="openCreateNode">
+        <text class="add-spot-text">＋ 添加景点</text>
+      </view>
+
+      <view class="bottom-spacer"></view>
     </scroll-view>
 
-    <view v-if="isPreview" class="bg-white border-t border-black/5 p-4 pb-safe">
-      <u-button
-        type="primary"
-        text="保存行程"
-        customStyle="border-radius: 999px; background: #FF2442; border: none;"
-        :loading="saving"
-        @click="handleSavePreview"
-      ></u-button>
+    <!-- 底部固定按钮 -->
+    <view v-if="isPreview" class="bottom-bar">
+      <view class="save-btn" :class="{ loading: saving }" @click="handleSavePreview">
+        <text class="save-btn-text">{{ saving ? '保存中...' : '保存行程 ✨' }}</text>
+      </view>
     </view>
 
-    <view v-if="showEditor" class="fixed inset-0 z-50 flex items-end">
-      <view class="absolute inset-0 bg-black/35" @click="closeEditor"></view>
-      <view class="relative w-full bg-white rounded-t-3xl p-4 pb-safe">
-        <view class="flex items-center justify-between mb-3">
-          <text class="text-[16px] font-bold text-[#1A1A1A]">{{ editingNodeId ? '编辑节点' : '新增节点' }}</text>
-          <text class="text-[#999] text-[13px]" @click="closeEditor">关闭</text>
-        </view>
-        <view class="form-row">
-          <text class="label">标题</text>
-          <input v-model="editorForm.title" class="input" placeholder="例如：西湖晨游" />
-        </view>
-        <view class="form-row">
-          <text class="label">时间段</text>
-          <input v-model="editorForm.timeSlot" class="input" placeholder="09:00-10:30" />
-        </view>
-        <view class="form-row">
-          <text class="label">地点</text>
-          <input v-model="editorForm.location" class="input" placeholder="请输入地点" />
-        </view>
-        <view class="form-row">
-          <text class="label">交通</text>
-          <input v-model="editorForm.transport" class="input" placeholder="步行/打车/地铁" />
-        </view>
-        <view class="flex gap-2">
-          <view class="form-row flex-1">
-            <text class="label">Day</text>
-            <input v-model="editorForm.dayIndex" class="input" type="number" />
-          </view>
-          <view class="form-row flex-1">
-            <text class="label">顺序</text>
-            <input v-model="editorForm.sequence" class="input" type="number" />
+    <!-- 编辑弹窗 -->
+    <view v-if="showEditor" class="editor-overlay">
+      <view class="editor-mask" @click="closeEditor"></view>
+      <view class="editor-sheet">
+        <view class="editor-handle"></view>
+        <view class="editor-header">
+          <text class="editor-title">{{ editingNodeId ? '编辑景点' : '新增景点' }}</text>
+          <view class="editor-close" @click="closeEditor">
+            <u-icon name="close" size="18" color="#999"></u-icon>
           </view>
         </view>
-        <view class="flex gap-2 mt-3">
-          <view class="status-picker" :class="{ active: editorForm.status === 'planned' }" @click="editorForm.status = 'planned'">计划</view>
-          <view class="status-picker" :class="{ active: editorForm.status === 'done' }" @click="editorForm.status = 'done'">完成</view>
-          <view class="status-picker" :class="{ active: editorForm.status === 'skipped' }" @click="editorForm.status = 'skipped'">跳过</view>
+        <scroll-view scroll-y class="editor-body">
+          <view class="form-row">
+            <text class="label">景点名称</text>
+            <input v-model="editorForm.title" class="input" placeholder="例如：西湖晨游" />
+          </view>
+          <view class="form-row">
+            <text class="label">时间段</text>
+            <input v-model="editorForm.timeSlot" class="input" placeholder="09:00-10:30" />
+          </view>
+          <view class="form-row">
+            <text class="label">地点</text>
+            <input v-model="editorForm.location" class="input" placeholder="请输入地点" />
+          </view>
+          <view class="form-row">
+            <text class="label">交通方式</text>
+            <view class="transport-picker">
+              <view
+                v-for="t in transportOptions"
+                :key="t.value"
+                class="transport-opt"
+                :class="{ active: editorForm.transport === t.value }"
+                :style="editorForm.transport === t.value ? { background: t.bg, borderColor: t.color, color: t.color } : {}"
+                @click="editorForm.transport = t.value"
+              >
+                {{ t.emoji }} {{ t.label }}
+              </view>
+            </view>
+          </view>
+          <view class="form-row-inline">
+            <view class="form-row flex-1">
+              <text class="label">Day</text>
+              <input v-model="editorForm.dayIndex" class="input" type="number" />
+            </view>
+            <view class="form-row flex-1">
+              <text class="label">顺序</text>
+              <input v-model="editorForm.sequence" class="input" type="number" />
+            </view>
+            <view class="form-row flex-1">
+              <text class="label">预算</text>
+              <input v-model="editorForm.cost" class="input" type="number" placeholder="¥" />
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="label">状态</text>
+            <view class="status-picker-row">
+              <view class="status-picker" :class="{ active: editorForm.status === 'planned' }" @click="editorForm.status = 'planned'">📋 计划</view>
+              <view class="status-picker" :class="{ active: editorForm.status === 'done' }" @click="editorForm.status = 'done'">✅ 完成</view>
+              <view class="status-picker" :class="{ active: editorForm.status === 'skipped' }" @click="editorForm.status = 'skipped'">⏭️ 跳过</view>
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="label">备注</text>
+            <textarea v-model="editorForm.notes" class="textarea" placeholder="可选备注"></textarea>
+          </view>
+        </scroll-view>
+        <view class="editor-footer">
+          <view class="confirm-btn" @click="submitEditor">
+            <text class="confirm-btn-text">确认</text>
+          </view>
         </view>
-        <view class="form-row mt-3">
-          <text class="label">备注</text>
-          <textarea v-model="editorForm.notes" class="textarea" placeholder="可选备注"></textarea>
-        </view>
-        <u-button
-          type="primary"
-          text="确认"
-          customStyle="margin-top: 14px; border-radius: 999px; background: #FF2442; border: none;"
-          @click="submitEditor"
-        ></u-button>
       </view>
     </view>
   </view>
@@ -162,8 +235,17 @@ const editorForm = ref<any>({
   dayIndex: 1,
   sequence: 1,
   status: 'planned',
-  notes: ''
+  notes: '',
+  cost: 0
 });
+const activeDay = ref(1);
+
+const transportOptions = [
+  { value: '步行', label: '步行', emoji: '🚶', color: '#16a34a', bg: 'rgba(22,163,74,0.1)' },
+  { value: '公交', label: '公交', emoji: '🚌', color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
+  { value: '打车', label: '打车', emoji: '🚗', color: '#E8A87C', bg: 'rgba(232,168,124,0.1)' },
+  { value: '地铁', label: '地铁', emoji: '🚇', color: '#9333ea', bg: 'rgba(147,51,234,0.1)' }
+];
 
 function normalizeLocalContent(raw: any) {
   if (raw?.content?.nodes) return raw.content;
@@ -186,6 +268,7 @@ function sortNodes(nodes: LinearNode[]) {
 const nodes = computed<LinearNode[]>(() => sortNodes(linearContent.value?.nodes || []));
 const dayCount = computed(() => Math.max(1, ...nodes.value.map(n => Number(n.dayIndex) || 1), 1));
 const nodeCount = computed(() => nodes.value.length);
+const totalBudget = computed(() => nodes.value.reduce((sum, n) => sum + (Number((n as any).cost) || 0), 0));
 const dayGroups = computed(() => {
   const groups: Record<number, LinearNode[]> = {};
   nodes.value.forEach(node => {
@@ -198,6 +281,36 @@ const dayGroups = computed(() => {
     .sort((a, b) => a - b)
     .map(day => ({ dayIndex: day, nodes: groups[day] }));
 });
+
+const filteredDayGroups = computed(() => {
+  if (dayGroups.value.length === 0) return [];
+  const found = dayGroups.value.find(g => g.dayIndex === activeDay.value);
+  return found ? [found] : [dayGroups.value[0]];
+});
+
+function getTimeColor(timeSlot: string) {
+  if (!timeSlot) return '#B8C5D6';
+  const hour = parseInt(timeSlot);
+  if (isNaN(hour)) return '#B8C5D6';
+  if (hour < 12) return '#F0C987';
+  if (hour < 18) return '#E8A87C';
+  return '#B8C5D6';
+}
+
+function getTransportEmoji(transport: string) {
+  const map: Record<string, string> = { '步行': '🚶', '公交': '🚌', '打车': '🚗', '地铁': '🚇' };
+  return map[transport] || '🚶';
+}
+
+function getTransportStyle(transport: string) {
+  const styles: Record<string, any> = {
+    '步行': { background: 'rgba(22,163,74,0.1)', color: '#16a34a' },
+    '公交': { background: 'rgba(37,99,235,0.1)', color: '#2563eb' },
+    '打车': { background: 'rgba(232,168,124,0.15)', color: '#E8A87C' },
+    '地铁': { background: 'rgba(147,51,234,0.1)', color: '#9333ea' }
+  };
+  return styles[transport] || { background: 'rgba(0,0,0,0.05)', color: '#666' };
+}
 
 function statusText(status: string) {
   if (status === 'done') return '已完成';
@@ -266,7 +379,8 @@ function openCreateNode() {
     dayIndex: dayCount.value,
     sequence: nodeCount.value + 1,
     status: 'planned',
-    notes: ''
+    notes: '',
+    cost: 0
   };
   showEditor.value = true;
 }
@@ -281,7 +395,8 @@ function openEditNode(node: LinearNode) {
     dayIndex: node.dayIndex || 1,
     sequence: node.sequence || 1,
     status: node.status || 'planned',
-    notes: node.notes || ''
+    notes: node.notes || '',
+    cost: (node as any).cost || 0
   };
   showEditor.value = true;
 }
@@ -331,14 +446,18 @@ async function submitEditor() {
 }
 
 async function removeNode(node: LinearNode) {
+  console.log('[removeNode] itineraryId:', itineraryId.value, 'isPreview:', isPreview.value, 'node.id:', node.id);
   if (!itineraryId.value || isPreview.value) {
     linearContent.value.nodes = nodes.value.filter(n => String(n.id) !== String(node.id));
+    uni.showToast({ title: '已删除(本地)', icon: 'success' });
     return;
   }
   try {
     const res: any = await itineraryStore.deleteNode(itineraryId.value, String(node.id));
     hydrateFromResponse(res);
-  } catch (_) {
+    uni.showToast({ title: '已删除', icon: 'success' });
+  } catch (e: any) {
+    console.error('[removeNode] error:', e);
     uni.showToast({ title: '删除失败', icon: 'none' });
   }
 }
@@ -366,6 +485,27 @@ function goBack() {
   uni.navigateBack();
 }
 
+function confirmDeleteItinerary() {
+  const id = itineraryId.value;
+  if (!id) return;
+  uni.showModal({
+    title: '删除行程',
+    content: `确定要删除「${itineraryTitle.value}」吗？此操作不可撤销。`,
+    confirmColor: '#FF6B6B',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await itineraryStore.removeItinerary(id);
+          uni.showToast({ title: '已删除', icon: 'success' });
+          setTimeout(() => uni.navigateBack(), 800);
+        } catch (e) {
+          uni.showToast({ title: '删除失败', icon: 'none' });
+        }
+      }
+    }
+  });
+}
+
 onLoad((options: any) => {
   if (options?.id) {
     loadDetail(String(options.id));
@@ -388,92 +528,518 @@ onLoad((options: any) => {
 </script>
 
 <style lang="scss" scoped>
-.pb-safe {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+/* ===== 奶油极简风格 ===== */
+.page {
+  min-height: 100vh;
+  background: #FFF8F0;
+  display: flex;
+  flex-direction: column;
 }
 
-.status-badge {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10px;
+/* 毛玻璃顶栏 */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 248, 240, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 24rpx 20rpx;
+}
+.bar-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(149, 184, 163, 0.1);
+}
+.bar-btn:active { opacity: 0.7; }
+.bar-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2D2D2D;
+  max-width: 400rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-right {
+  display: flex;
+  gap: 12rpx;
+}
+
+/* Loading */
+.loading-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 主滚动区 */
+.main-scroll {
+  flex: 1;
+  box-sizing: border-box;
+}
+
+/* Hero 封面 */
+.hero-card {
+  margin: 20rpx 24rpx 0;
+  border-radius: 0 0 48rpx 48rpx;
+  background: linear-gradient(135deg, #95B8A3 0%, #B8C5D6 100%);
+  overflow: hidden;
+}
+.hero-inner {
+  padding: 48rpx 36rpx 40rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.hero-dest {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
+}
+.hero-date {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.85);
+}
+.hero-badge {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
+}
+.hero-badge-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* 统计卡片行 */
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 24rpx 0;
+}
+.stat-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 24rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+.stat-num {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #2D2D2D;
+}
+.stat-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+/* Day 标签栏 */
+.day-tabs-scroll {
+  margin-top: 24rpx;
+  padding: 0 24rpx;
+  white-space: nowrap;
+}
+.day-tabs {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 4rpx 0 16rpx;
+}
+.day-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 32rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #888;
+  background: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.25s;
+}
+.day-tab.active {
+  background: #95B8A3;
+  color: #fff;
+  box-shadow: 0 4rpx 16rpx rgba(149, 184, 163, 0.35);
+}
+
+/* 空状态 */
+.empty-state {
+  margin: 60rpx 24rpx;
+  padding: 80rpx 0;
+  background: #fff;
+  border-radius: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+.empty-icon { font-size: 56rpx; }
+.empty-text { font-size: 26rpx; color: #bbb; }
+
+/* 时间线 */
+.timeline-section {
+  padding: 0 24rpx;
+  margin-top: 8rpx;
+}
+.timeline-item {
+  display: flex;
+  gap: 20rpx;
+  min-height: 100rpx;
+}
+.timeline-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20rpx;
+  padding-top: 28rpx;
+}
+.timeline-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.timeline-line {
+  width: 4rpx;
+  flex: 1;
+  margin-top: 8rpx;
+  border-radius: 4rpx;
+  opacity: 0.4;
+}
+
+/* 景点卡片 */
+.timeline-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+}
+.timeline-card.is-done {
+  opacity: 0.7;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.time-tag {
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+}
+.done-check {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  font-size: 24rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2D2D2D;
+  display: block;
+}
+.card-title.line-through {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.card-desc {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 6rpx;
+  display: block;
+}
+.card-notes {
+  font-size: 22rpx;
+  color: #aaa;
+  margin-top: 8rpx;
+  display: block;
+  line-height: 1.5;
+}
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 16rpx;
+  flex-wrap: wrap;
+}
+.transport-tag {
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+}
+.card-budget {
+  font-size: 22rpx;
+  color: #D4A574;
   font-weight: 600;
 }
 
-.status-planned {
-  background: rgba(255, 36, 66, 0.12);
-  color: #ff2442;
+/* 操作按钮 */
+.card-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+.action-btn {
+  font-size: 22rpx;
+  color: #999;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.03);
+}
+.action-btn:active { opacity: 0.6; }
+.action-btn.danger {
+  color: #E8A87C;
+  background: rgba(232, 168, 124, 0.1);
 }
 
-.status-done {
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
+/* 添加景点 */
+.add-spot-btn {
+  margin: 16rpx 24rpx 0;
+  padding: 28rpx 0;
+  border: 2rpx dashed rgba(149, 184, 163, 0.5);
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.add-spot-btn:active { background: rgba(149, 184, 163, 0.06); }
+.add-spot-text {
+  font-size: 28rpx;
+  color: #95B8A3;
+  font-weight: 600;
 }
 
-.status-skipped {
-  background: rgba(156, 163, 175, 0.16);
-  color: #6b7280;
+.bottom-spacer { height: 40rpx; }
+
+/* 底部保存按钮 */
+.bottom-bar {
+  background: rgba(255, 248, 240, 0.9);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+}
+.save-btn {
+  background: linear-gradient(135deg, #95B8A3 0%, #B8C5D6 100%);
+  border-radius: 999rpx;
+  padding: 26rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(149, 184, 163, 0.35);
+}
+.save-btn:active { opacity: 0.85; transform: scale(0.98); }
+.save-btn.loading { opacity: 0.6; }
+.save-btn-text {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #fff;
 }
 
-.op-btn {
-  min-width: 52px;
-  text-align: center;
-  font-size: 11px;
-  color: #666;
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: #f6f7f9;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+/* 编辑弹窗 */
+.editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+}
+.editor-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+.editor-sheet {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border-radius: 48rpx 48rpx 0 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.editor-handle {
+  width: 64rpx;
+  height: 8rpx;
+  border-radius: 8rpx;
+  background: #e0e0e0;
+  margin: 16rpx auto 0;
+}
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx 16rpx;
+}
+.editor-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2D2D2D;
+}
+.editor-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.editor-body {
+  flex: 1;
+  padding: 0 32rpx;
+  overflow-y: auto;
+}
+.editor-footer {
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
 }
 
-.op-btn.danger {
-  color: #ff2442;
-  border-color: rgba(255, 36, 66, 0.3);
-  background: rgba(255, 36, 66, 0.06);
-}
-
+/* 表单 */
 .form-row {
-  margin-top: 8px;
+  margin-top: 20rpx;
 }
-
+.form-row-inline {
+  display: flex;
+  gap: 16rpx;
+}
+.flex-1 { flex: 1; }
 .label {
   display: block;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 6px;
+  font-size: 24rpx;
+  color: #888;
+  margin-bottom: 10rpx;
+  font-weight: 500;
 }
-
 .input {
   width: 100%;
-  height: 40px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  background: #fff;
-  padding: 0 12px;
+  height: 80rpx;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  border-radius: 20rpx;
+  background: #FAFAF8;
+  padding: 0 24rpx;
   box-sizing: border-box;
+  font-size: 28rpx;
+  color: #333;
 }
-
+.input:focus {
+  border-color: rgba(149, 184, 163, 0.5);
+  background: #fff;
+}
 .textarea {
   width: 100%;
-  min-height: 80px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  padding: 10px 12px;
+  min-height: 160rpx;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
   box-sizing: border-box;
+  background: #FAFAF8;
+  font-size: 28rpx;
+  color: #333;
 }
 
+/* 交通选择器 */
+.transport-picker {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+.transport-opt {
+  padding: 12rpx 24rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #888;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  background: #FAFAF8;
+}
+.transport-opt.active {
+  border-width: 2rpx;
+  border-style: solid;
+}
+
+/* 状态选择器 */
+.status-picker-row {
+  display: flex;
+  gap: 12rpx;
+}
 .status-picker {
   flex: 1;
   text-align: center;
-  font-size: 12px;
-  color: #666;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 8px 0;
+  font-size: 24rpx;
+  color: #888;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(0, 0, 0, 0.06);
+  padding: 16rpx 0;
+  background: #FAFAF8;
+  font-weight: 500;
+}
+.status-picker.active {
+  color: #95B8A3;
+  border-color: rgba(149, 184, 163, 0.4);
+  background: rgba(149, 184, 163, 0.08);
 }
 
-.status-picker.active {
-  color: #ff2442;
-  border-color: rgba(255, 36, 66, 0.35);
-  background: rgba(255, 36, 66, 0.08);
+/* 确认按钮 */
+.confirm-btn {
+  background: linear-gradient(135deg, #95B8A3 0%, #D4A574 100%);
+  border-radius: 999rpx;
+  padding: 26rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6rpx 20rpx rgba(149, 184, 163, 0.3);
+}
+.confirm-btn:active { opacity: 0.85; }
+.confirm-btn-text {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #fff;
 }
 </style>

@@ -1,133 +1,138 @@
 <template>
-  <view class="xhs-create">
-    <!-- 无顶栏：左上关闭、右上发布（浮动） -->
-    <view class="xhs-float-close" @click="goBack">
-      <u-icon name="close" size="24" color="#333"></u-icon>
-    </view>
-    <view class="xhs-float-publish" @click="handlePublish">
-      <u-loading-icon v-if="loading" color="#FF2442" size="18"></u-loading-icon>
-      <text v-else class="xhs-float-publish-txt" :class="{ disabled: !isValid }">发布</text>
+  <view class="cream-create">
+    <!-- 顶栏：X关闭 + 标题 + 渐变发布按钮 -->
+    <view class="cream-navbar">
+      <view class="cream-navbar-inner">
+        <view class="cream-nav-close" @click="goBack">
+          <u-icon name="close" size="22" color="#8B7E74"></u-icon>
+        </view>
+        <text class="cream-nav-title">发布笔记</text>
+        <view class="cream-nav-publish" :class="{ disabled: !isValid }" @click="handlePublish">
+          <u-loading-icon v-if="loading" color="#fff" size="16"></u-loading-icon>
+          <text v-else class="cream-nav-publish-txt">发布</text>
+        </view>
+      </view>
     </view>
 
     <scroll-view
       scroll-y
-      class="xhs-scroll"
+      class="cream-scroll"
       :style="{ height: scrollHeight + 'px' }"
       :scroll-top="scrollTop"
       @scroll="scrollTop = $event.detail.scrollTop"
     >
-      <view class="xhs-body">
-        <!-- 1. 图片区：横向滑动，首格为添加 -->
-        <view class="xhs-section xhs-photos">
-          <scroll-view scroll-x class="xhs-photos-scroll" show-scrollbar="false">
-            <view class="xhs-photos-row">
-              <view class="xhs-photo-add" @click="triggerUpload">
-                <u-icon name="plus" size="32" color="#ccc"></u-icon>
-                <text class="xhs-photo-add-txt">添加图片</text>
-              </view>
-              <view
-                v-for="(item, index) in fileList"
-                :key="index"
-                class="xhs-photo-item"
-              >
-                <image :src="item.url" mode="aspectFill" class="xhs-photo-img" />
-                <view class="xhs-photo-del" @click.stop="deletePic({ index })">
-                  <u-icon name="close-circle-fill" size="20" color="rgba(0,0,0,0.5)"></u-icon>
-                </view>
+      <view class="cream-body">
+        <!-- 图片区：3列网格 -->
+        <view class="cream-section cream-photos">
+          <view class="cream-photos-grid">
+            <view
+              v-for="(item, index) in fileList"
+              :key="index"
+              class="cream-photo-item"
+            >
+              <image :src="item.url" mode="aspectFill" class="cream-photo-img" />
+              <view class="cream-photo-del" @click.stop="deletePic({ index })">
+                <u-icon name="close-circle-fill" size="20" color="rgba(139,126,116,0.7)"></u-icon>
               </view>
             </view>
-          </scroll-view>
-          <view v-if="fileList.length > 0" class="xhs-photo-tip">最多9张，首张为封面</view>
+            <!-- 添加按钮（最后一格） -->
+            <view v-if="fileList.length < 9" class="cream-photo-add" @click="triggerUpload">
+              <u-icon name="plus" size="28" color="#D4A574"></u-icon>
+              <text class="cream-photo-add-txt">添加图片</text>
+            </view>
+          </view>
+          <view v-if="fileList.length > 0" class="cream-photo-tip">最多9张，首张为封面</view>
         </view>
 
-        <!-- 2. 标题 -->
-        <view class="xhs-section xhs-title-wrap">
+        <!-- 标题输入 -->
+        <view class="cream-section cream-title-wrap">
           <input
             v-model="form.title"
-            class="xhs-title-input"
-            placeholder="填写标题，让更多人发现你"
-            placeholder-class="xhs-placeholder"
+            class="cream-title-input"
+            placeholder="填写标题会有更多赞哦~"
+            placeholder-class="cream-placeholder"
             maxlength="20"
           />
         </view>
 
-        <!-- 3. 正文 -->
-        <view class="xhs-section xhs-content-wrap">
+        <!-- 正文输入 -->
+        <view class="cream-section cream-content-wrap">
           <textarea
             v-model="form.content"
-            class="xhs-content-input"
-            placeholder="写写你去过的地方、吃过的美食、想分享的心情..."
-            placeholder-class="xhs-placeholder"
+            class="cream-content-input"
+            placeholder="分享你的旅行故事..."
+            placeholder-class="cream-placeholder"
             maxlength="1000"
             :auto-height="true"
           />
         </view>
 
-        <!-- 4. 话题标签（已选展示 + 添加） -->
-        <view class="xhs-section xhs-tags-wrap">
-          <view class="xhs-tags-row">
-            <view
-              v-for="(tag, i) in form.tags"
-              :key="i"
-              class="xhs-tag-chip"
-            >
-              <text>#{{ tag }}</text>
-              <view class="xhs-tag-remove" @click="form.tags.splice(i, 1)">
-                <u-icon name="close" size="12" color="#999"></u-icon>
+        <!-- 功能行列表 -->
+        <view class="cream-section cream-options-card">
+          <!-- 添加地点 -->
+          <view class="cream-opt" @click="addLocation">
+            <text class="cream-opt-emoji">📍</text>
+            <text class="cream-opt-label">添加地点</text>
+            <text class="cream-opt-value" :class="{ placeholder: !form.location }">{{ form.location || '' }}</text>
+            <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
+          </view>
+
+          <!-- 添加话题标签 -->
+          <view class="cream-opt" @click="addTag">
+            <text class="cream-opt-emoji">🏷</text>
+            <text class="cream-opt-label">添加话题标签</text>
+            <view class="cream-opt-tags" v-if="form.tags.length">
+              <view v-for="(tag, i) in form.tags" :key="i" class="cream-tag-chip">
+                <text class="cream-tag-text">#{{ tag }}</text>
+                <view class="cream-tag-remove" @click.stop="form.tags.splice(i, 1)">
+                  <u-icon name="close" size="10" color="#E8A87C"></u-icon>
+                </view>
               </view>
             </view>
-            <view class="xhs-tag-add" @click="addTag">
-              <u-icon name="plus" size="14" color="#FF2442"></u-icon>
-              <text>添加话题</text>
-            </view>
+            <u-icon v-else name="arrow-right" size="14" color="#C4B5A8"></u-icon>
+          </view>
+
+          <!-- 选择分类 -->
+          <view class="cream-opt" @click="showTypePicker = true">
+            <text class="cream-opt-emoji">📂</text>
+            <text class="cream-opt-label">选择分类</text>
+            <text class="cream-opt-value" :class="{ placeholder: !form.types.length }">{{ typeLabel }}</text>
+            <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
+          </view>
+
+          <!-- 隐私设置 -->
+          <view class="cream-opt" @click="showPrivacyPicker = true">
+            <text class="cream-opt-emoji">🔒</text>
+            <text class="cream-opt-label">隐私设置</text>
+            <text class="cream-opt-value">{{ privacyLabel }}</text>
+            <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
           </view>
         </view>
 
-        <!-- 5. 地点、分类、谁可以看 -->
-        <view class="xhs-section xhs-options">
-          <view class="xhs-opt" @click="addLocation">
-            <u-icon name="map" size="18" color="#666"></u-icon>
-            <text class="xhs-opt-label">地点</text>
-            <text class="xhs-opt-value" :class="{ placeholder: !form.location }">{{ form.location || '添加地点' }}</text>
-            <u-icon name="arrow-right" size="14" color="#ccc"></u-icon>
-          </view>
-          <view class="xhs-opt" @click="showTypePicker = true">
-            <u-icon name="grid" size="18" color="#666"></u-icon>
-            <text class="xhs-opt-label">分类</text>
-            <text class="xhs-opt-value" :class="{ placeholder: !form.types.length }">{{ typeLabel }}</text>
-            <u-icon name="arrow-right" size="14" color="#ccc"></u-icon>
-          </view>
-          <view class="xhs-opt" @click="showPrivacyPicker = true">
-            <u-icon name="lock" size="18" color="#666"></u-icon>
-            <text class="xhs-opt-label">谁可以看</text>
-            <text class="xhs-opt-value">{{ privacyLabel }}</text>
-            <u-icon name="arrow-right" size="14" color="#ccc"></u-icon>
-          </view>
-        </view>
-
-        <view class="xhs-bottom-pad"></view>
+        <view class="cream-bottom-pad"></view>
       </view>
     </scroll-view>
 
     <!-- 分类多选弹层 -->
-    <u-popup :show="showTypePicker" @close="showTypePicker = false" round="16" mode="bottom" :closeable="true">
-      <view class="type-popup">
-        <text class="type-popup-title">选择分类（可多选）</text>
-        <view class="type-options">
+    <u-popup :show="showTypePicker" @close="showTypePicker = false" round="24" mode="bottom" :closeable="true">
+      <view class="cream-popup">
+        <view class="cream-popup-handle"></view>
+        <text class="cream-popup-title">选择分类（可多选）</text>
+        <view class="cream-type-options">
           <view
             v-for="col in typeColumns"
             :key="col.value"
-            class="type-option"
+            class="cream-type-option"
             :class="{ active: form.types.includes(col.value) }"
             @click="toggleType(col.value)"
           >
-            <u-icon :name="form.types.includes(col.value) ? 'checkmark-circle-fill' : 'checkmark-circle'" size="18" :color="form.types.includes(col.value) ? '#FF2442' : '#ddd'"></u-icon>
+            <u-icon :name="form.types.includes(col.value) ? 'checkmark-circle-fill' : 'checkmark-circle'" size="18" :color="form.types.includes(col.value) ? '#E8A87C' : '#ddd'"></u-icon>
             <text>{{ col.label }}</text>
           </view>
         </view>
-        <view class="type-popup-footer">
-          <view class="type-popup-btn cancel" @click="showTypePicker = false">取消</view>
-          <view class="type-popup-btn confirm" @click="showTypePicker = false">确定</view>
+        <view class="cream-popup-footer">
+          <view class="cream-popup-btn cancel" @click="showTypePicker = false">取消</view>
+          <view class="cream-popup-btn confirm" @click="showTypePicker = false">确定</view>
         </view>
       </view>
     </u-popup>
@@ -141,22 +146,24 @@
     />
 
     <!-- 添加话题弹窗 -->
-    <u-popup :show="showTopicPopup" @close="showTopicPopup = false" round="16" mode="center" :closeable="true">
-      <view class="topic-popup">
-        <text class="topic-popup-title">添加话题</text>
+    <u-popup :show="showTopicPopup" @close="showTopicPopup = false" round="24" mode="center" :closeable="true">
+      <view class="cream-popup cream-topic-popup">
+        <text class="cream-popup-title">添加话题</text>
         <input
           v-model="topicInput"
-          class="topic-input"
+          class="cream-topic-input"
           placeholder="请输入话题名称"
-          placeholder-class="topic-placeholder"
+          placeholder-class="cream-placeholder"
           maxlength="20"
         />
-        <view class="topic-popup-footer">
-          <view class="topic-popup-btn cancel" @click="showTopicPopup = false">取消</view>
-          <view class="topic-popup-btn confirm" @click="confirmTopic">确定</view>
+        <view class="cream-popup-footer">
+          <view class="cream-popup-btn cancel" @click="showTopicPopup = false">取消</view>
+          <view class="cream-popup-btn confirm" @click="confirmTopic">确定</view>
         </view>
       </view>
     </u-popup>
+    <!-- 自定义 TabBar -->
+    <custom-tabbar current="/pages/post/create" />
   </view>
 </template>
 
@@ -356,298 +363,325 @@ const handlePublish = async () => {
 </script>
 
 <style lang="scss" scoped>
-.xhs-create {
+/* === 奶油极简风格 === */
+.cream-create {
   min-height: 100vh;
-  background: #fff;
+  background: #FFF8F0;
   position: relative;
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
 }
 
-.xhs-float-close {
+/* 顶栏 */
+.cream-navbar {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
   z-index: 100;
-  width: 48px;
-  height: 48px;
+  background: #FFF8F0;
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+.cream-navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 16px;
+}
+.cream-nav-close {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
+  border-radius: 50%;
+  background: rgba(139, 126, 116, 0.08);
 }
-.xhs-float-publish {
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 100;
-  min-width: 56px;
-  height: 48px;
+.cream-nav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #5D4E42;
+  letter-spacing: 0.5px;
+}
+.cream-nav-publish {
+  padding: 8px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #E8A87C, #D4A574);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
-  padding-right: 16px;
-  padding-right: calc(16px + constant(safe-area-inset-right));
-  padding-right: calc(16px + env(safe-area-inset-right));
-}
-.xhs-float-publish-txt {
-  font-size: 16px;
-  font-weight: 600;
-  color: #FF2442;
+  justify-content: center;
+  min-width: 64px;
+  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
   &.disabled {
-    color: #ffb3bd;
+    opacity: 0.5;
   }
 }
+.cream-nav-publish-txt {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
 
-.xhs-scroll {
+/* 滚动区 */
+.cream-scroll {
   padding-top: calc(52px + constant(safe-area-inset-top));
   padding-top: calc(52px + env(safe-area-inset-top));
 }
-.xhs-body {
+.cream-body {
   padding: 16px 16px 32px;
 }
+.cream-section {
+  margin-bottom: 16px;
+}
 
-.xhs-section {
+/* 图片区：3列网格 */
+.cream-photos {
   margin-bottom: 20px;
 }
-
-/* 图片区 */
-.xhs-photos {
-  margin-bottom: 24px;
+.cream-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.xhs-photos-scroll {
-  white-space: nowrap;
+.cream-photo-item {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background: #F5EDE4;
+}
+.cream-photo-img {
   width: 100%;
+  height: 100%;
+  display: block;
 }
-.xhs-photos-row {
-  display: inline-flex;
+.cream-photo-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 0;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
 }
-.xhs-photo-add {
-  width: 100px;
-  height: 100px;
-  min-width: 100px;
-  min-height: 100px;
-  background: #f7f7f7;
-  border: 1px dashed #e0e0e0;
-  border-radius: 8px;
+.cream-photo-add {
+  aspect-ratio: 1;
+  border: 2px dashed #D4A574;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  background: rgba(212, 165, 116, 0.06);
 }
-.xhs-photo-add-txt {
+.cream-photo-add-txt {
+  font-size: 11px;
+  color: #D4A574;
+}
+.cream-photo-tip {
   font-size: 12px;
-  color: #999;
-}
-.xhs-photo-item {
-  width: 100px;
-  height: 100px;
-  min-width: 100px;
-  min-height: 100px;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  background: #f0f0f0;
-}
-.xhs-photo-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.xhs-photo-del {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-}
-.xhs-photo-tip {
-  font-size: 12px;
-  color: #999;
+  color: #C4B5A8;
   margin-top: 8px;
 }
 
-/* 标题 */
-.xhs-title-wrap {
-  padding: 4px 0;
+/* 标题输入 */
+.cream-title-wrap {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
 }
-.xhs-title-input {
+.cream-title-input {
   width: 100%;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: 17px;
+  font-weight: 600;
+  color: #3D3028;
   line-height: 1.4;
   min-height: 28px;
   display: block;
   box-sizing: border-box;
 }
 
-/* 正文 */
-.xhs-content-wrap {
-  padding: 12px 0;
+/* 正文输入 */
+.cream-content-wrap {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
   min-height: 120px;
 }
-.xhs-content-input {
+.cream-content-input {
   width: 100%;
   font-size: 15px;
-  color: #333;
-  line-height: 1.6;
+  color: #5D4E42;
+  line-height: 1.7;
   min-height: 100px;
   display: block;
   box-sizing: border-box;
 }
 
-.xhs-placeholder {
-  color: #bbb;
+.cream-placeholder {
+  color: #C4B5A8;
 }
 
-/* 话题 */
-.xhs-tags-wrap {
-  padding: 8px 0;
-}
-.xhs-tags-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-.xhs-tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  background: #fff0f2;
-  border-radius: 16px;
-  font-size: 13px;
-  color: #FF2442;
-}
-.xhs-tag-remove {
-  padding: 0 2px;
-}
-.xhs-tag-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border: 1px dashed #FF2442;
-  border-radius: 16px;
-  font-size: 13px;
-  color: #FF2442;
-}
-
-/* 选项行 */
-.xhs-options {
-  background: #fafafa;
-  border-radius: 12px;
+/* 功能行列表卡片 */
+.cream-options-card {
+  background: #fff;
+  border-radius: 20px;
   overflow: hidden;
-  margin-top: 8px;
+  padding: 4px 0;
 }
-.xhs-opt {
+.cream-opt {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 15px 16px;
+  border-bottom: 1px solid #F5EDE4;
   min-height: 52px;
   box-sizing: border-box;
 }
-.xhs-opt:last-child {
+.cream-opt:last-child {
   border-bottom: none;
 }
-.xhs-opt-label {
-  font-size: 15px;
-  color: #333;
-  margin-left: 10px;
-  width: 72px;
+.cream-opt-emoji {
+  font-size: 18px;
+  width: 28px;
+  text-align: center;
   flex-shrink: 0;
 }
-.xhs-opt-value {
+.cream-opt-label {
+  font-size: 15px;
+  color: #5D4E42;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+.cream-opt-value {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: #5D4E42;
   text-align: right;
   margin-right: 8px;
   &.placeholder {
-    color: #999;
+    color: #C4B5A8;
   }
 }
+.cream-opt-tags {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-right: 8px;
+}
 
-.xhs-bottom-pad {
+/* 话题标签胶囊 */
+.cream-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #FFF0E6;
+  border-radius: 14px;
+}
+.cream-tag-text {
+  font-size: 12px;
+  color: #E8A87C;
+  font-weight: 500;
+}
+.cream-tag-remove {
+  padding: 0 2px;
+}
+
+.cream-bottom-pad {
   height: 24px;
 }
 
-/* 弹窗样式沿用 */
-.type-popup, .topic-popup {
+/* === 弹窗通用 === */
+.cream-popup {
   padding: 24px 20px;
-  background: #fff;
-  border-radius: 16px;
+  padding-bottom: calc(24px + constant(safe-area-inset-bottom));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  background: #FFF8F0;
+  border-radius: 24px 24px 0 0;
 }
-.type-popup-title, .topic-popup-title {
+.cream-popup-handle {
+  width: 36px;
+  height: 4px;
+  background: #E0D5CA;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.cream-popup-title {
   display: block;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #3D3028;
   margin-bottom: 16px;
   text-align: center;
 }
-.type-options {
+.cream-type-options {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
-.type-option {
+.cream-type-option {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  border-radius: 12px;
-  background: #f6f7f9;
+  border-radius: 14px;
+  background: #fff;
   &.active {
-    background: #fff0f2;
+    background: #FFF0E6;
   }
   text {
     font-size: 15px;
-    color: #333;
+    color: #5D4E42;
   }
 }
-.type-popup-footer, .topic-popup-footer {
+.cream-popup-footer {
   display: flex;
   gap: 12px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #F5EDE4;
 }
-.type-popup-btn, .topic-popup-btn {
+.cream-popup-btn {
   flex: 1;
   height: 44px;
   line-height: 44px;
   text-align: center;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 14px;
   &.cancel {
-    background: #f0f0f0;
-    color: #666;
+    background: #F5EDE4;
+    color: #8B7E74;
   }
   &.confirm {
-    background: #FF2442;
+    background: linear-gradient(135deg, #E8A87C, #D4A574);
     color: #fff;
+    box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
   }
 }
-.topic-input {
+
+/* 话题弹窗（居中模式） */
+.cream-topic-popup {
+  border-radius: 24px;
+  min-width: 300px;
+}
+.cream-topic-input {
   width: 100%;
   height: 48px;
   padding: 0 14px;
   font-size: 15px;
-  color: #333;
-  background: #f6f7f9;
-  border-radius: 12px;
+  color: #5D4E42;
+  background: #fff;
+  border: 1px solid #F5EDE4;
+  border-radius: 14px;
   margin-bottom: 16px;
   box-sizing: border-box;
-}
-.topic-placeholder {
-  color: #999;
 }
 </style>

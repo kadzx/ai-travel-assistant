@@ -12,6 +12,7 @@ router.put('/:id', itineraryController.update);
 router.patch('/:id/nodes/:nodeId', itineraryController.updateNode);
 router.post('/:id/nodes', itineraryController.addNode);
 router.delete('/:id/nodes/:nodeId', itineraryController.deleteNode);
+router.delete('/:id', itineraryController.deleteItinerary);
 router.post('/:id/nodes/reorder', itineraryController.reorderNodes);
 router.get('/', itineraryController.list);
 router.get('/:id', itineraryController.getDetail);

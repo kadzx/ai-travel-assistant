@@ -5,6 +5,7 @@ import {
   updateItineraryNode,
   addItineraryNode,
   deleteItineraryNode,
+  deleteItinerary as deleteItineraryApi,
   reorderItineraryNodes
 } from '@/api/itinerary';
 
@@ -118,6 +119,14 @@ export const useItineraryStore = defineStore('itinerary', () => {
     return res;
   };
 
+  const removeItinerary = async (id: string | number) => {
+    await deleteItineraryApi(id);
+    list.value = list.value.filter(item => String(item.id) !== String(id));
+    if (currentItinerary.value && String(currentItinerary.value.id) === String(id)) {
+      currentItinerary.value = null;
+    }
+  };
+
   return { 
     list, 
     currentItinerary, 
@@ -128,6 +137,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
     updateNode,
     addNode,
     deleteNode,
-    reorderNodes
+    reorderNodes,
+    removeItinerary
   };
 });
