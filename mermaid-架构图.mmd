@@ -1,0 +1,61 @@
+%% ============================
+%% 图1：系统分层架构图
+%% 复制到 https://mermaid.live 预览并截图
+%% ============================
+
+graph TB
+    subgraph 客户端["🖥️ 前端跨端交互层（Client）"]
+        direction LR
+        A1["uni-app 3.0<br/>跨端框架"]
+        A2["Vue 3 + Pinia<br/>状态管理"]
+        A3["uView Plus<br/>UI 组件库"]
+        A4["vue-i18n<br/>多语言国际化"]
+        A5["Recorder-UniCore<br/>语音录制"]
+    end
+
+    subgraph 通信层["🔗 通信协议"]
+        direction LR
+        B1["HTTP RESTful API"]
+        B2["SSE 流式通信"]
+    end
+
+    subgraph 服务端["⚙️ 后端服务支撑层（Server）"]
+        direction LR
+        C1["Express 框架<br/>路由 & 中间件"]
+        C2["JWT 鉴权<br/>+ bcrypt 加密"]
+        C3["SSE 流式网关<br/>AI 对话 & 行程生成"]
+        C4["multer 文件上传"]
+        C5["winston + morgan<br/>日志系统"]
+    end
+
+    subgraph AI服务["🤖 AI 能力层"]
+        direction LR
+        D1["Coze 大模型 API<br/>智能对话"]
+        D2["Coze 工作流<br/>行程结构化生成"]
+    end
+
+    subgraph 数据层["🗄️ 数据存储层（Database）"]
+        direction LR
+        E1["MySQL 8.0<br/>关系型数据库"]
+        E2["Sequelize ORM<br/>模型管理"]
+        E3["11 张数据表<br/>User / Post / Itinerary<br/>Comment / Like / Follow ..."]
+    end
+
+    subgraph 部署层["🐳 部署运维层"]
+        direction LR
+        F1["Docker<br/>容器化"]
+        F2["docker-compose<br/>编排"]
+    end
+
+    客户端 -->|"HTTP / SSE"| 通信层
+    通信层 --> 服务端
+    服务端 --> AI服务
+    服务端 --> 数据层
+    服务端 --> 部署层
+
+    style 客户端 fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
+    style 通信层 fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+    style 服务端 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    style AI服务 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style 数据层 fill:#FFF8E1,stroke:#F57F17,stroke-width:2px
+    style 部署层 fill:#ECEFF1,stroke:#455A64,stroke-width:2px

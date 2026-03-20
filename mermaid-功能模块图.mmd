@@ -1,0 +1,46 @@
+%% ============================
+%% 图2：功能模块图
+%% 复制到 https://mermaid.live 预览并截图
+%% ============================
+
+graph TB
+    ROOT["🌏 多语言 AI 旅游助手 APP"]
+
+    ROOT --> M1["🤖 AI 智能对话模块"]
+    ROOT --> M2["🗺️ 行程规划模块"]
+    ROOT --> M3["📝 内容社区模块"]
+    ROOT --> M4["👤 用户体系模块"]
+    ROOT --> M5["⚙️ 系统支撑模块"]
+
+    M1 --> M1A["SSE 流式对话"]
+    M1 --> M1B["快捷提示词"]
+    M1 --> M1C["行程卡片生成"]
+    M1 --> M1D["对话历史记录"]
+
+    M2 --> M2A["AI 自动生成行程"]
+    M2 --> M2B["行程保存 / 编辑"]
+    M2 --> M2C["行程详情展示"]
+    M2 --> M2D["节点增删改排序"]
+
+    M3 --> M3A["帖子发布与浏览"]
+    M3 --> M3B["瀑布流 Feed<br/>推荐 / 关注"]
+    M3 --> M3C["点赞 / 评论 / 收藏"]
+    M3 --> M3D["搜索功能"]
+
+    M4 --> M4A["注册 / 登录<br/>JWT 鉴权"]
+    M4 --> M4B["个人中心"]
+    M4 --> M4C["用户主页"]
+    M4 --> M4D["关注 / 粉丝"]
+
+    M5 --> M5A["文件上传"]
+    M5 --> M5B["通知系统"]
+    M5 --> M5C["管理后台 API"]
+    M5 --> M5D["数据爬虫<br/>小红书采集"]
+    M5 --> M5E["Docker 部署"]
+
+    style ROOT fill:#1565C0,stroke:#0D47A1,color:#fff,stroke-width:2px
+    style M1 fill:#7E57C2,stroke:#4527A0,color:#fff,stroke-width:2px
+    style M2 fill:#26A69A,stroke:#00695C,color:#fff,stroke-width:2px
+    style M3 fill:#EF5350,stroke:#C62828,color:#fff,stroke-width:2px
+    style M4 fill:#FFA726,stroke:#E65100,color:#fff,stroke-width:2px
+    style M5 fill:#78909C,stroke:#37474F,color:#fff,stroke-width:2px
