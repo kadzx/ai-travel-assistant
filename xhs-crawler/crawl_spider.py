@@ -68,7 +68,7 @@ PROVINCES = [
     "香港", "澳门",
 ]
 
-PER_PROVINCE = 50  # 每个省爬多少条
+PER_PROVINCE = 10  # 每个省爬多少条
 
 
 def crawl_keyword(xhs, keyword: str, num: int):
@@ -108,19 +108,8 @@ def crawl_keyword(xhs, keyword: str, num: int):
         if not note_id:
             continue
 
-        # 已存在且有正文的跳过
+        # 重新抓取模式：即使已存在也覆盖保存，不跳过
         existing_path = DATA_RAW_DIR / f"{note_id}.json"
-        if existing_path.exists():
-            try:
-                with open(existing_path, "r", encoding="utf-8") as f:
-                    existing = json.load(f)
-                ec = existing.get("content", "")
-                et = existing.get("title", "")
-                if ec and ec != et and len(ec) > len(et) + 10:
-                    success_count += 1
-                    continue
-            except Exception:
-                pass
 
         note_url = f"https://www.xiaohongshu.com/explore/{note_id}?xsec_token={xsec_token}"
 
