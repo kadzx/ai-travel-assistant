@@ -17,9 +17,13 @@ export interface Post {
   isLiked: boolean;
   created_at: string;
   location?: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
   tags?: string[];
   type?: string;
   privacy?: string;
+  lang?: string;
 }
 
 export interface GetPostsParams {
@@ -30,6 +34,7 @@ export interface GetPostsParams {
   userId?: number | string;
   keyword?: string;
   tag?: string;
+  lang?: string;
 }
 
 export const getPosts = (params: GetPostsParams) => {
@@ -41,6 +46,7 @@ export const getPosts = (params: GetPostsParams) => {
   if (params.userId != null) p.userId = params.userId;
   if (params.keyword) p.keyword = params.keyword;
   if (params.tag) p.tag = params.tag;
+  if (params.lang) p.lang = params.lang;
   return http.get('/posts', p);
 };
 
@@ -53,9 +59,13 @@ export const createPost = (data: {
   content: string; 
   images: string[];
   location?: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
   tags?: string[];
   type?: string;
   privacy?: string;
+  lang?: string;
 }) => {
   return http.post('/posts', data);
 };

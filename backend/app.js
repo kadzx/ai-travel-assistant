@@ -61,6 +61,24 @@ const startServer = async () => {
   try {
     // 使用 sync() 不 alter，避免已有表索引过多触发 MySQL 单表 64 键限制
     await sequelize.sync();
+    // 为 posts 表补充定位字段（若已存在则忽略）
+    const addColumnIfNotExists = async (table, column, sql) => {
+      try {
+        const [cols] = await sequelize.query(`SHOW COLUMNS FROM ${table} LIKE '${column}'`);
+        if (cols.length === 0) {
+          await sequelize.query(sql);
+          console.log(`${table}.${column} 列已添加`);
+        }
+      } catch (e) {
+        console.warn(`${table}.${column} 列添加跳过:`, e.message);
+      }
+    };
+    await addColumnIfNotExists('posts', 'latitude',
+      "ALTER TABLE posts ADD COLUMN latitude DECIMAL(10,7) DEFAULT NULL COMMENT '纬度' AFTER location");
+    await addColumnIfNotExists('posts', 'longitude',
+      "ALTER TABLE posts ADD COLUMN longitude DECIMAL(10,7) DEFAULT NULL COMMENT '经度' AFTER latitude");
+    await addColumnIfNotExists('posts', 'address',
+      "ALTER TABLE posts ADD COLUMN address VARCHAR(255) DEFAULT NULL COMMENT '详细地址' AFTER longitude");
     // 将 users.avatar 升级为 LONGTEXT 以支持 Base64 存储（已有库需执行一次）
     try {
       await sequelize.query(

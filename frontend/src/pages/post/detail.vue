@@ -56,7 +56,9 @@
       <text class="post-title">{{ post.title }}</text>
 
       <!-- 正文 -->
-      <text class="post-content">{{ post.content }}</text>
+      <view class="post-content">
+        <rich-text :nodes="post.content" />
+      </view>
 
       <!-- 标签区 -->
       <view class="tags-row" v-if="(post.tags && post.tags.length) || post.typeLabel">
@@ -425,6 +427,11 @@ const loadPost = async (id: string) => {
         user: res.user,
         tags: res.tags || [],
         typeLabel: TYPE_LABELS[res.type] || res.type || "",
+        location: res.location || "",
+        latitude: res.latitude || null,
+        longitude: res.longitude || null,
+        address: res.address || "",
+        lang: res.lang || "zh",
       };
       isLiked.value = res.isLiked;
       isFavorited.value = res.isFavorited;
@@ -819,10 +826,41 @@ onLoad((options) => {
   display: block;
   font-size: 28rpx;
   color: #3D3D3D;
-  line-height: 1.6;
-  white-space: pre-wrap;
+  line-height: 1.8;
   margin-bottom: 32rpx;
   letter-spacing: 0.3rpx;
+}
+/* 富文本内部样式 */
+.post-content :deep(h2) {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #3D3028;
+  margin: 16rpx 0 8rpx;
+}
+.post-content :deep(strong), .post-content :deep(b) {
+  font-weight: 700;
+  color: #3D3028;
+}
+.post-content :deep(em), .post-content :deep(i) {
+  font-style: italic;
+}
+.post-content :deep(blockquote) {
+  border-left: 6rpx solid #D4A574;
+  padding: 8rpx 16rpx;
+  margin: 12rpx 0;
+  background: rgba(212, 165, 116, 0.06);
+  color: #5D4E42;
+  border-radius: 0 8rpx 8rpx 0;
+}
+.post-content :deep(ul), .post-content :deep(ol) {
+  padding-left: 32rpx;
+  margin: 8rpx 0;
+}
+.post-content :deep(li) {
+  margin: 4rpx 0;
+}
+.post-content :deep(p) {
+  margin: 6rpx 0;
 }
 
 /* 标签区 */

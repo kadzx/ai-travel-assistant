@@ -40,6 +40,19 @@
         </view>
       </view>
 
+      <!-- 地图概览 -->
+      <view v-if="mapMarkers.length > 0" class="map-section">
+        <map
+          class="itinerary-map"
+          :latitude="mapCenter.lat"
+          :longitude="mapCenter.lng"
+          :markers="mapMarkers"
+          :scale="12"
+          :show-location="false"
+          @markertap="onMarkerTap"
+        />
+      </view>
+
       <!-- 统计卡片行 -->
       <view class="stats-row">
         <view class="stat-card">
@@ -108,6 +121,7 @@
             </view>
             <!-- 操作按钮 -->
             <view class="card-actions">
+              <view class="action-btn navigate" @click="navigateToNode(node)">📍 导航</view>
               <view class="action-btn" @click="openEditNode(node)">编辑</view>
               <view class="action-btn" @click="moveNode(node, -1)">↑</view>
               <view class="action-btn" @click="moveNode(node, 1)">↓</view>
@@ -154,7 +168,10 @@
           </view>
           <view class="form-row">
             <text class="label">地点</text>
-            <input v-model="editorForm.location" class="input" placeholder="请输入地点" />
+            <view style="display:flex;gap:8rpx;align-items:center;">
+              <input v-model="editorForm.location" class="input" style="flex:1;" placeholder="请输入地点" />
+              <view class="locate-btn" @click="chooseNodeLocation">📍</view>
+            </view>
           </view>
           <view class="form-row">
             <text class="label">交通方式</text>
@@ -205,6 +222,16 @@
         </view>
       </view>
     </view>
+
+    <!-- 导航弹窗 -->
+    <route-popup
+      v-model:visible="showRoutePopup"
+      :dest-name="routeTarget.name"
+      :dest-location="routeTarget.location"
+      :dest-lat="routeTarget.lat"
+      :dest-lng="routeTarget.lng"
+      :city="linearContent.destination || ''"
+    />
   </view>
 </template>
 
@@ -213,6 +240,7 @@ import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { getItineraryDetail, saveItinerary } from '@/api/itinerary';
 import { useItineraryStore, type LinearNode } from '@/stores/itinerary';
+import RoutePopup from '@/components/route-popup/route-popup.vue';
 
 const itineraryStore = useItineraryStore();
 const loading = ref(false);
@@ -231,6 +259,9 @@ const editorForm = ref<any>({
   title: '',
   timeSlot: '',
   location: '',
+  latitude: null,
+  longitude: null,
+  address: '',
   transport: '',
   dayIndex: 1,
   sequence: 1,
@@ -375,6 +406,9 @@ function openCreateNode() {
     title: '',
     timeSlot: '',
     location: '',
+    latitude: null,
+    longitude: null,
+    address: '',
     transport: '',
     dayIndex: dayCount.value,
     sequence: nodeCount.value + 1,
@@ -391,6 +425,9 @@ function openEditNode(node: LinearNode) {
     title: node.title || '',
     timeSlot: node.timeSlot || '',
     location: node.location || '',
+    latitude: node.latitude ?? null,
+    longitude: node.longitude ?? null,
+    address: (node as any).address || '',
     transport: node.transport || '',
     dayIndex: node.dayIndex || 1,
     sequence: node.sequence || 1,
@@ -505,6 +542,82 @@ function confirmDeleteItinerary() {
     }
   });
 }
+
+// ===== 地图相关 =====
+const mapMarkers = computed(() => {
+  return nodes.value
+    .filter(n => n.latitude && n.longitude)
+    .map((n, idx) => ({
+      id: idx,
+      latitude: Number(n.latitude),
+      longitude: Number(n.longitude),
+      title: n.title,
+      callout: {
+        content: n.title,
+        display: 'ALWAYS',
+        fontSize: 12,
+        borderRadius: 8,
+        padding: 6,
+        bgColor: '#fff',
+        color: '#3D3028'
+      },
+      width: 24,
+      height: 32
+    }));
+});
+
+const mapCenter = computed(() => {
+  const markers = mapMarkers.value;
+  if (markers.length === 0) return { lat: 39.9042, lng: 116.4074 };
+  const avgLat = markers.reduce((sum, m) => sum + m.latitude, 0) / markers.length;
+  const avgLng = markers.reduce((sum, m) => sum + m.longitude, 0) / markers.length;
+  return { lat: avgLat, lng: avgLng };
+});
+
+const onMarkerTap = (e: any) => {
+  const marker = mapMarkers.value[e.markerId];
+  if (marker) {
+    uni.openLocation({
+      latitude: marker.latitude,
+      longitude: marker.longitude,
+      name: marker.title,
+      scale: 15
+    });
+  }
+};
+
+// ===== 导航弹窗 =====
+const showRoutePopup = ref(false);
+const routeTarget = ref({ name: '', location: '', lat: null as number | null, lng: null as number | null });
+
+const navigateToNode = (node: LinearNode) => {
+  const keyword = node.location || node.title || '';
+  if (!keyword) {
+    uni.showToast({ title: '暂无地点信息', icon: 'none' });
+    return;
+  }
+  routeTarget.value = {
+    name: node.title || '',
+    location: node.location || '',
+    lat: node.latitude ?? null,
+    lng: node.longitude ?? null
+  };
+  showRoutePopup.value = true;
+};
+
+const chooseNodeLocation = () => {
+  uni.chooseLocation({
+    success: (res) => {
+      editorForm.value.location = res.name || '';
+      editorForm.value.latitude = res.latitude;
+      editorForm.value.longitude = res.longitude;
+      editorForm.value.address = res.address || '';
+    },
+    fail: () => {
+      // 静默失败，用户可以手动输入
+    }
+  });
+};
 
 onLoad((options: any) => {
   if (options?.id) {
@@ -850,6 +963,38 @@ onLoad((options: any) => {
 }
 
 .bottom-spacer { height: 40rpx; }
+
+/* 地图概览 */
+.map-section {
+  margin: 20rpx 24rpx 0;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+.itinerary-map {
+  width: 100%;
+  height: 400rpx;
+}
+
+/* 导航按钮 */
+.action-btn.navigate {
+  color: #95B8A3;
+  background: rgba(149, 184, 163, 0.1);
+}
+
+/* 定位按钮 */
+.locate-btn {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  background: rgba(149, 184, 163, 0.1);
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+.locate-btn:active { opacity: 0.7; }
 
 /* 底部保存按钮 */
 .bottom-bar {

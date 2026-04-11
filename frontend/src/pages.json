@@ -121,6 +121,15 @@
 				"navigationBarBackgroundColor": "#FFF8F0",
 				"navigationBarTextStyle": "black"
 			}
+		},
+		{
+			"path": "pages/common/chooseLocation",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
 		}
 	],
 	"globalStyle": {

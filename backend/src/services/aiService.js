@@ -33,7 +33,9 @@ class AIService {
         {
           "time": "09:00-10:30",
           "activity": "活动名称",
-          "location": "地点",
+          "location": "地点名称",
+          "latitude": 30.2500,
+          "longitude": 120.1667,
           "transport": "交通方式",
           "cost": 0,
           "notes": "备注"
@@ -41,7 +43,9 @@ class AIService {
       ]
     }
   ]
-}`;
+}
+
+注意：每个 activity 的 latitude 和 longitude 请尽量填写该地点真实的经纬度坐标（WGS84）。`;
 
       const content = await this._callCozeAPI([{ role: 'user', content: prompt }]);
 

@@ -37,6 +37,21 @@ const Post = sequelize.define('Post', {
     allowNull: true,
     comment: 'Location Name / 地点名称'
   },
+  latitude: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: true,
+    comment: 'Latitude / 纬度'
+  },
+  longitude: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: true,
+    comment: 'Longitude / 经度'
+  },
+  address: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Detailed Address / 详细地址'
+  },
   tags: {
     type: DataTypes.JSON,
     allowNull: true,
@@ -54,6 +69,12 @@ const Post = sequelize.define('Post', {
     allowNull: true,
     defaultValue: 'public',
     comment: 'Privacy / 隐私设置 (public, private, friends)'
+  },
+  lang: {
+    type: DataTypes.STRING(10),
+    allowNull: false,
+    defaultValue: 'zh',
+    comment: 'Language / 语言 (zh, en)'
   }
 }, {
   tableName: 'posts',

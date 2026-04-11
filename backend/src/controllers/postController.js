@@ -8,7 +8,7 @@ const cozeWorkflowService = require('../services/cozeWorkflowService');
 const postController = {
   // Create a new post
   createPost: asyncHandler(async (req, res) => {
-    const { title, content, images, location, tags, type, privacy } = req.body;
+    const { title, content, images, location, latitude, longitude, address, tags, type, privacy, lang } = req.body;
     const userId = req.user.id;
 
     const post = await Post.create({
@@ -17,9 +17,13 @@ const postController = {
       content,
       images: images || [],
       location,
+      latitude: latitude || null,
+      longitude: longitude || null,
+      address: address || null,
       tags: tags || [],
       type: type || 'recommend',
-      privacy: privacy || 'public'
+      privacy: privacy || 'public',
+      lang: lang || 'zh'
     });
 
     return ResponseUtil.success(res, post);
@@ -36,6 +40,7 @@ const postController = {
     const userId = req.query.userId ? parseInt(req.query.userId) : null; // posts by this user
     const keyword = (req.query.keyword || req.query.q || '').trim();
     const tag = (req.query.tag || '').trim();
+    const lang = (req.query.lang || '').trim();
     const currentUserId = req.user ? req.user.id : null;
 
     const where = {};
@@ -68,6 +73,10 @@ const postController = {
       where.type = type;
     }
 
+    if (lang) {
+      where.lang = lang;
+    }
+
     if (keyword) {
       where[Op.or] = [
         { title: { [Op.like]: `%${keyword}%` } },
@@ -86,7 +95,7 @@ const postController = {
 
     const { count, rows } = await Post.findAndCountAll({
       where,
-      attributes: ['id', 'title', 'images', 'content', 'created_at', 'type', 'location', 'tags'],
+      attributes: ['id', 'title', 'images', 'content', 'created_at', 'type', 'location', 'tags', 'lang'],
       include: [
         {
           model: User,

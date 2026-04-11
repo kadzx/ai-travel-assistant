@@ -12,3 +12,4 @@ playwright_state.json
 # 爬取数据（可选：若不想把 raw/ready 提交到仓库可取消注释）
 data/raw/
 data/ready/
+data/

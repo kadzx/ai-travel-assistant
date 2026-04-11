@@ -55,15 +55,45 @@
           />
         </view>
 
-        <!-- 正文输入 -->
+        <!-- 正文输入（富文本） -->
         <view class="cream-section cream-content-wrap">
-          <textarea
-            v-model="form.content"
-            class="cream-content-input"
+          <!-- 工具栏 -->
+          <view class="editor-toolbar">
+            <view class="toolbar-btn" :class="{ active: formats.bold }" @click="formatText('bold')">
+              <text class="toolbar-icon" style="font-weight:bold;">B</text>
+            </view>
+            <view class="toolbar-btn" :class="{ active: formats.italic }" @click="formatText('italic')">
+              <text class="toolbar-icon" style="font-style:italic;">I</text>
+            </view>
+            <view class="toolbar-btn" :class="{ active: formats.header === 2 }" @click="formatText('header', formats.header === 2 ? false : 2)">
+              <text class="toolbar-icon" style="font-weight:600;font-size:13px;">H</text>
+            </view>
+            <view class="toolbar-divider"></view>
+            <view class="toolbar-btn" :class="{ active: formats.list === 'bullet' }" @click="formatText('list', formats.list === 'bullet' ? false : 'bullet')">
+              <text class="toolbar-icon">•≡</text>
+            </view>
+            <view class="toolbar-btn" :class="{ active: formats.list === 'ordered' }" @click="formatText('list', formats.list === 'ordered' ? false : 'ordered')">
+              <text class="toolbar-icon">1.</text>
+            </view>
+            <view class="toolbar-divider"></view>
+            <view class="toolbar-btn" :class="{ active: formats.blockquote }" @click="formatText('blockquote')">
+              <text class="toolbar-icon" style="font-size:16px;">❝</text>
+            </view>
+            <view class="toolbar-btn" @click="editorUndo">
+              <text class="toolbar-icon" style="font-size:14px;">↩</text>
+            </view>
+          </view>
+          <!-- 编辑器 -->
+          <editor
+            id="postEditor"
+            class="cream-editor"
             placeholder="分享你的旅行故事..."
-            placeholder-class="cream-placeholder"
-            maxlength="1000"
-            :auto-height="true"
+            :show-img-size="false"
+            :show-img-toolbar="false"
+            :show-img-resize="false"
+            @ready="onEditorReady"
+            @input="onEditorInput"
+            @statuschange="onEditorStatusChange"
           />
         </view>
 
@@ -72,8 +102,9 @@
           <!-- 添加地点 -->
           <view class="cream-opt" @click="addLocation">
             <text class="cream-opt-emoji">📍</text>
-            <text class="cream-opt-label">添加地点</text>
-            <text class="cream-opt-value" :class="{ placeholder: !form.location }">{{ form.location || '' }}</text>
+            <text v-if="!form.location" class="cream-opt-label">添加地点</text>
+            <text class="cream-opt-value" :class="{ placeholder: !form.location, 'align-left': !!form.location }">{{ form.location || '' }}</text>
+            <text v-if="form.latitude" style="font-size:12px;color:#95B8A3;margin-right:4px;flex-shrink:0;">✓ 已定位</text>
             <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
           </view>
 
@@ -184,6 +215,9 @@ const form = reactive({
   content: '',
   images: [] as string[],
   location: '',
+  latitude: null as number | null,
+  longitude: null as number | null,
+  address: '',
   tags: [] as string[],
   types: ['recommend'] as string[],
   privacy: 'public'
@@ -203,8 +237,42 @@ const privacyColumns = [
   { label: '好友·互相关注可见', value: 'friends' }
 ];
 
+// ===== 富文本编辑器 =====
+let editorCtx: any = null;
+const formats = ref<any>({});
+
+function onEditorReady() {
+  uni.createSelectorQuery()
+    .select('#postEditor')
+    .context((res: any) => {
+      editorCtx = res?.context;
+    })
+    .exec();
+}
+
+function onEditorInput(e: any) {
+  // editor 的 input 事件返回 { html, text, delta }
+  form.content = e.detail?.html || '';
+}
+
+function onEditorStatusChange(e: any) {
+  formats.value = e.detail || {};
+}
+
+function formatText(name: string, value?: any) {
+  if (!editorCtx) return;
+  editorCtx.format(name, value !== undefined ? value : !formats.value[name]);
+}
+
+function editorUndo() {
+  if (!editorCtx) return;
+  editorCtx.undo();
+}
+
 const isValid = computed(() => {
-  return form.title.trim() && form.content.trim() && fileList.value.length > 0;
+  // content 现在是 HTML，检查是否有实际文字
+  const textContent = form.content.replace(/<[^>]*>/g, '').trim();
+  return form.title.trim() && textContent && fileList.value.length > 0;
 });
 
 const typeLabel = computed(() => {
@@ -311,18 +379,23 @@ const confirmTopic = () => {
 };
 
 const addLocation = () => {
-  uni.chooseLocation({
-    success: (res) => { form.location = res.name; },
-    fail: () => {
-      uni.showModal({
-        title: '添加地点',
-        editable: true,
-        placeholderText: '请输入地点名称',
-        success: (res) => {
-          if (res.confirm && res.content) form.location = res.content;
-        }
-      });
+  uni.navigateTo({
+    url: '/pages/common/chooseLocation',
+    events: {
+      chooseLocation: (data: any) => {
+        form.location = data.name || '';
+        form.address = data.address || '';
+        form.latitude = data.latitude;
+        form.longitude = data.longitude;
+      }
     }
+  });
+  // 兼容 eventChannel 不可用的情况
+  uni.$once('chooseLocationResult', (data: any) => {
+    form.location = data.name || '';
+    form.address = data.address || '';
+    form.latitude = data.latitude;
+    form.longitude = data.longitude;
   });
 };
 
@@ -348,9 +421,13 @@ const handlePublish = async () => {
       content: form.content,
       images: form.images,
       location: form.location || undefined,
+      latitude: form.latitude ?? undefined,
+      longitude: form.longitude ?? undefined,
+      address: form.address || undefined,
       tags: form.tags?.length ? form.tags : undefined,
       type: form.types[0] || 'recommend',
-      privacy: form.privacy
+      privacy: form.privacy,
+      lang: 'zh'
     });
     uni.showToast({ title: '发布成功', icon: 'success' });
     setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000);
@@ -510,17 +587,56 @@ const handlePublish = async () => {
 .cream-content-wrap {
   background: #fff;
   border-radius: 16px;
-  padding: 14px 16px;
+  padding: 0;
   min-height: 120px;
+  overflow: hidden;
 }
-.cream-content-input {
+
+/* 富文本工具栏 */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 16rpx;
+  border-bottom: 1px solid #F5EDE4;
+  background: #FFFBF5;
+  flex-wrap: wrap;
+}
+.toolbar-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12rpx;
+  transition: all 0.15s;
+}
+.toolbar-btn:active { opacity: 0.7; }
+.toolbar-btn.active {
+  background: rgba(212, 165, 116, 0.15);
+}
+.toolbar-icon {
+  font-size: 15px;
+  color: #5D4E42;
+}
+.toolbar-btn.active .toolbar-icon {
+  color: #D4A574;
+}
+.toolbar-divider {
+  width: 1px;
+  height: 28rpx;
+  background: #E8DDD0;
+  margin: 0 6rpx;
+}
+
+/* 编辑器 */
+.cream-editor {
   width: 100%;
+  min-height: 200rpx;
+  padding: 14px 16px;
   font-size: 15px;
   color: #5D4E42;
   line-height: 1.7;
-  min-height: 100px;
-  display: block;
-  box-sizing: border-box;
 }
 
 .cream-placeholder {
@@ -563,8 +679,14 @@ const handlePublish = async () => {
   color: #5D4E42;
   text-align: right;
   margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   &.placeholder {
     color: #C4B5A8;
+  }
+  &.align-left {
+    text-align: left;
   }
 }
 .cream-opt-tags {

@@ -11,6 +11,7 @@ const postRoutes = require('./postRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const followRoutes = require('./followRoutes');
 const notificationRoutes = require('./notificationRoutes');
+const mapRoutes = require('./mapRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/spots', spotRoutes);
@@ -23,5 +24,6 @@ router.use('/social', socialRoutes);
 router.use('/user', userRoutes);
 router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/map', mapRoutes);
 
 module.exports = router;

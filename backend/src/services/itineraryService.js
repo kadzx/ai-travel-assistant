@@ -1,5 +1,6 @@
 const { Itinerary } = require('../models');
 const aiService = require('./aiService');
+const mapService = require('./mapService');
 const logger = require('../utils/logger');
 
 const DEFAULT_TIMEZONE = 'Asia/Shanghai';
@@ -26,6 +27,9 @@ function normalizeNode(rawNode, index) {
     timeSlot: rawNode?.timeSlot || '',
     title: rawNode?.title || rawNode?.activity || `行程节点 ${index + 1}`,
     location: rawNode?.location || '',
+    latitude: rawNode?.latitude ?? null,
+    longitude: rawNode?.longitude ?? null,
+    address: rawNode?.address || '',
     transport: rawNode?.transport || '',
     cost: Math.max(0, toNumber(rawNode?.cost, 0)),
     durationMin: Math.max(0, toNumber(rawNode?.durationMin, 0)),
@@ -119,6 +123,8 @@ function convertAIResultToLinear(result, params = {}) {
           timeSlot: activity.time || '',
           title: activity.activity || activity.title || `Day ${dayIdx + 1} 活动 ${seqIdx + 1}`,
           location: activity.location || '',
+          latitude: activity.latitude ?? null,
+          longitude: activity.longitude ?? null,
           notes: activity.notes || '',
           status: 'planned'
         });
@@ -155,7 +161,14 @@ class ItineraryService {
   async generate(data) {
     try {
       const generatedContent = await aiService.generateItinerary(data);
-      return convertAIResultToLinear(generatedContent, data);
+      const linear = convertAIResultToLinear(generatedContent, data);
+      // 用腾讯地图 API 补全缺失的经纬度
+      try {
+        linear.nodes = await mapService.enrichNodesWithCoords(linear.nodes, data.destination || '');
+      } catch (e) {
+        logger.warn('MapService enrichNodesWithCoords failed, skip:', e.message);
+      }
+      return linear;
     } catch (error) {
       logger.error('ItineraryService generate error:', error);
       throw error;

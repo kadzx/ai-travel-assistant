@@ -60,8 +60,8 @@
             <view class="card-info">
               <text class="trip-title">{{ item.title || '未命名行程' }}</text>
               <view class="info-row">
-                <text class="info-icon">📍</text>
-                <text class="info-text">{{ item.destination || '未知目的地' }}</text>
+                <text class="info-icon">⏱️</text>
+                <text class="info-text">推荐游玩 {{ getDayCount(item) }} 天</text>
               </view>
               <view class="info-row">
                 <text class="info-icon">📅</text>
@@ -146,6 +146,13 @@ function formatDateShort(item: any) {
 
 function getNodes(item: any): any[] {
   return item?.content?.nodes || [];
+}
+
+function getDayCount(item: any): number {
+  const nodes = getNodes(item);
+  if (nodes.length === 0) return 1;
+  const maxDay = Math.max(...nodes.map((n: any) => n.dayIndex || 1));
+  return maxDay;
 }
 
 function getProgress(item: any) {

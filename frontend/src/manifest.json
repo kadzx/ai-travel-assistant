@@ -68,5 +68,23 @@
     "uniStatistics": {  
         "enable": false
     },
+    "h5": {
+        "sdkConfigs": {
+            "maps": {
+                "qqmap": {
+                    "key": "YAJBZ-MJCKB-763UX-J3PR4-RQL36-NHF7X"
+                }
+            }
+        },
+        "distribute": {
+            "sdkConfigs": {
+                "maps": {
+                    "tencent": {
+                        "key": "YAJBZ-MJCKB-763UX-J3PR4-RQL36-NHF7X"
+                    }
+                }
+            }
+        }
+    },
     "vueVersion" : "3"
 }

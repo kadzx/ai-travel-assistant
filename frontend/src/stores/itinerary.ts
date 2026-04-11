@@ -26,6 +26,9 @@ export interface LinearNode {
   timeSlot?: string;
   title: string;
   location?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string;
   transport?: string;
   cost?: number;
   durationMin?: number;
