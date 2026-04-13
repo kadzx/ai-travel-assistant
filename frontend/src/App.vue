@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
+import { hasChosenLang } from '@/locale';
+
 onLaunch(() => {
   console.log("App Launch");
+  // 如果已经选择过语言，跳过语言选择页直接进欢迎页
+  if (hasChosenLang()) {
+    uni.reLaunch({ url: '/pages/welcome/welcome' });
+  }
 });
 onShow(() => {
   console.log("App Show");

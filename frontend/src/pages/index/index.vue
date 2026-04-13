@@ -62,18 +62,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onShow, onReachBottom, onPullDownRefresh as onPullDownRefreshHook } from '@dcloudio/uni-app';
+import { useI18n } from 'vue-i18n';
 import MasonryItem, { type MasonryItemProps } from '@/components/masonry-item/masonry-item.vue';
 import { getPosts } from '@/api/post';
 import { getUnreadCount } from '@/api/notification';
 import { useUserStore } from '@/stores/user';
+import { getStoredLang } from '@/locale';
 // @ts-ignore
 import ULoadmore from 'uview-plus/components/u-loadmore/u-loadmore.vue';
 // @ts-ignore
 import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
 
 const userStore = useUserStore();
+const { t } = useI18n();
 const unreadCount = ref(0);
 
 const NOTIFY_POLL_INTERVAL = 20000;
@@ -86,7 +89,7 @@ async function fetchUnreadCount(silent = false) {
     const res = await getUnreadCount();
     const next = res?.count ?? 0;
     if (!silent && next > prev && prev >= 0) {
-      uni.showToast({ title: '你有新通知', icon: 'none' });
+      uni.showToast({ title: t('index.newNotification'), icon: 'none' });
     }
     unreadCount.value = next;
   } catch (_) {
@@ -103,7 +106,7 @@ function stopNotifyPoll() {
   if (notifyPollTimer) { clearInterval(notifyPollTimer); notifyPollTimer = null; }
 }
 
-const tabs = [{ name: '推荐' }, { name: '关注' }];
+const tabs = computed(() => [{ name: t('index.recommend') }, { name: t('index.following') }]);
 const currentTab = ref(0);
 const loadStatus = ref('loadmore');
 const leftList = ref<MasonryItemProps[]>([]);
@@ -139,11 +142,11 @@ const handleLike = (item: any) => {
 const loadData = async () => {
   loadStatus.value = 'loading';
   try {
-    const params: any = { page: page.value, limit };
+    const params: any = { page: page.value, limit, lang: getStoredLang() };
     if (currentTab.value === 1) params.feed = 'following';
     const res: any = await getPosts(params);
     if (res && res.list) {
-      const typeLabels: Record<string, string> = { recommend: '推荐', nearby: '附近', food: '美食', travel: '旅行', beauty: '彩妆' };
+      const typeLabels: Record<string, string> = { recommend: t('typeLabels.recommend'), nearby: t('typeLabels.nearby'), food: t('typeLabels.food'), travel: t('typeLabels.travel'), beauty: t('typeLabels.beauty') };
       const newPosts = res.list.map((p: any) => ({
         id: p.id,
         image: p.image || 'https://via.placeholder.com/300x400',

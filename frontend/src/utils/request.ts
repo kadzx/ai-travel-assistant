@@ -1,5 +1,10 @@
 export const BASE_URL = 'http://localhost:3000/api';
 
+import i18n from '@/locale';
+
+// Helper to get i18n translation outside components
+const t = (key: string) => (i18n.global as any).t(key);
+
 // 4. TypeScript interfaces for API responses
 export interface ApiResponse<T = any> {
   code: number;
@@ -68,7 +73,7 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
         // 3. Response interceptor: Handle global errors
         if (statusCode === 401) {
           uni.showToast({
-            title: '登录已过期，请重新登录',
+            title: t('common.loginExpired'),
             icon: 'none'
           });
           // Clear token
@@ -109,7 +114,7 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
           }
         } else {
           uni.showToast({
-            title: `请求错误: ${statusCode}`,
+            title: `${t('common.requestError')}: ${statusCode}`,
             icon: 'none'
           });
           reject(new Error(`HTTP Error ${statusCode}`));
@@ -117,7 +122,7 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
       },
       fail: (err) => {
         uni.showToast({
-          title: '网络连接失败',
+          title: t('common.networkError'),
           icon: 'none'
         });
         reject(err);

@@ -6,10 +6,10 @@
         <view class="cream-nav-close" @click="goBack">
           <u-icon name="close" size="22" color="#8B7E74"></u-icon>
         </view>
-        <text class="cream-nav-title">发布笔记</text>
+        <text class="cream-nav-title">{{ t('post.publish') }}</text>
         <view class="cream-nav-publish" :class="{ disabled: !isValid }" @click="handlePublish">
           <u-loading-icon v-if="loading" color="#fff" size="16"></u-loading-icon>
-          <text v-else class="cream-nav-publish-txt">发布</text>
+          <text v-else class="cream-nav-publish-txt">{{ t('post.publishBtn') }}</text>
         </view>
       </view>
     </view>
@@ -38,10 +38,10 @@
             <!-- 添加按钮（最后一格） -->
             <view v-if="fileList.length < 9" class="cream-photo-add" @click="triggerUpload">
               <u-icon name="plus" size="28" color="#D4A574"></u-icon>
-              <text class="cream-photo-add-txt">添加图片</text>
+              <text class="cream-photo-add-txt">{{ t('post.addImage') }}</text>
             </view>
           </view>
-          <view v-if="fileList.length > 0" class="cream-photo-tip">最多9张，首张为封面</view>
+          <view v-if="fileList.length > 0" class="cream-photo-tip">{{ t('post.photoTip') }}</view>
         </view>
 
         <!-- 标题输入 -->
@@ -49,7 +49,7 @@
           <input
             v-model="form.title"
             class="cream-title-input"
-            placeholder="填写标题会有更多赞哦~"
+            :placeholder="t('post.titlePlaceholder')"
             placeholder-class="cream-placeholder"
             maxlength="20"
           />
@@ -87,7 +87,7 @@
           <editor
             id="postEditor"
             class="cream-editor"
-            placeholder="分享你的旅行故事..."
+            :placeholder="t('post.contentPlaceholder')"
             :show-img-size="false"
             :show-img-toolbar="false"
             :show-img-resize="false"
@@ -102,16 +102,16 @@
           <!-- 添加地点 -->
           <view class="cream-opt" @click="addLocation">
             <text class="cream-opt-emoji">📍</text>
-            <text v-if="!form.location" class="cream-opt-label">添加地点</text>
+            <text v-if="!form.location" class="cream-opt-label">{{ t('post.location') }}</text>
             <text class="cream-opt-value" :class="{ placeholder: !form.location, 'align-left': !!form.location }">{{ form.location || '' }}</text>
-            <text v-if="form.latitude" style="font-size:12px;color:#95B8A3;margin-right:4px;flex-shrink:0;">✓ 已定位</text>
+            <text v-if="form.latitude" style="font-size:12px;color:#95B8A3;margin-right:4px;flex-shrink:0;">{{ t('post.located') }}</text>
             <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
           </view>
 
           <!-- 添加话题标签 -->
           <view class="cream-opt" @click="addTag">
             <text class="cream-opt-emoji">🏷</text>
-            <text class="cream-opt-label">添加话题标签</text>
+            <text class="cream-opt-label">{{ t('post.tags') }}</text>
             <view class="cream-opt-tags" v-if="form.tags.length">
               <view v-for="(tag, i) in form.tags" :key="i" class="cream-tag-chip">
                 <text class="cream-tag-text">#{{ tag }}</text>
@@ -126,7 +126,7 @@
           <!-- 选择分类 -->
           <view class="cream-opt" @click="showTypePicker = true">
             <text class="cream-opt-emoji">📂</text>
-            <text class="cream-opt-label">选择分类</text>
+            <text class="cream-opt-label">{{ t('post.category') }}</text>
             <text class="cream-opt-value" :class="{ placeholder: !form.types.length }">{{ typeLabel }}</text>
             <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
           </view>
@@ -134,7 +134,7 @@
           <!-- 隐私设置 -->
           <view class="cream-opt" @click="showPrivacyPicker = true">
             <text class="cream-opt-emoji">🔒</text>
-            <text class="cream-opt-label">隐私设置</text>
+            <text class="cream-opt-label">{{ t('post.privacy') }}</text>
             <text class="cream-opt-value">{{ privacyLabel }}</text>
             <u-icon name="arrow-right" size="14" color="#C4B5A8"></u-icon>
           </view>
@@ -148,7 +148,7 @@
     <u-popup :show="showTypePicker" @close="showTypePicker = false" round="24" mode="bottom" :closeable="true">
       <view class="cream-popup">
         <view class="cream-popup-handle"></view>
-        <text class="cream-popup-title">选择分类（可多选）</text>
+        <text class="cream-popup-title">{{ t('post.categoryTitle') }}</text>
         <view class="cream-type-options">
           <view
             v-for="col in typeColumns"
@@ -162,8 +162,8 @@
           </view>
         </view>
         <view class="cream-popup-footer">
-          <view class="cream-popup-btn cancel" @click="showTypePicker = false">取消</view>
-          <view class="cream-popup-btn confirm" @click="showTypePicker = false">确定</view>
+          <view class="cream-popup-btn cancel" @click="showTypePicker = false">{{ t('common.cancel') }}</view>
+          <view class="cream-popup-btn confirm" @click="showTypePicker = false">{{ t('common.confirm') }}</view>
         </view>
       </view>
     </u-popup>
@@ -179,17 +179,17 @@
     <!-- 添加话题弹窗 -->
     <u-popup :show="showTopicPopup" @close="showTopicPopup = false" round="24" mode="center" :closeable="true">
       <view class="cream-popup cream-topic-popup">
-        <text class="cream-popup-title">添加话题</text>
+        <text class="cream-popup-title">{{ t('post.tagPopupTitle') }}</text>
         <input
           v-model="topicInput"
           class="cream-topic-input"
-          placeholder="请输入话题名称"
+          :placeholder="t('post.tagPlaceholder')"
           placeholder-class="cream-placeholder"
           maxlength="20"
         />
         <view class="cream-popup-footer">
-          <view class="cream-popup-btn cancel" @click="showTopicPopup = false">取消</view>
-          <view class="cream-popup-btn confirm" @click="confirmTopic">确定</view>
+          <view class="cream-popup-btn cancel" @click="showTopicPopup = false">{{ t('common.cancel') }}</view>
+          <view class="cream-popup-btn confirm" @click="confirmTopic">{{ t('common.confirm') }}</view>
         </view>
       </view>
     </u-popup>
@@ -201,8 +201,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, nextTick } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
+import { useI18n } from 'vue-i18n';
 import { createPost } from '@/api/post';
+import { getStoredLang } from '@/locale';
 
+const { t } = useI18n();
 const loading = ref(false);
 const fileList = ref<any[]>([]);
 const showTypePicker = ref(false);
@@ -223,19 +226,19 @@ const form = reactive({
   privacy: 'public'
 });
 
-const typeColumns = [
-  { label: '推荐', value: 'recommend' },
-  { label: '附近', value: 'nearby' },
-  { label: '美食', value: 'food' },
-  { label: '旅行', value: 'travel' },
-  { label: '彩妆', value: 'beauty' }
-];
+const typeColumns = computed(() => [
+  { label: t('typeLabels.recommend'), value: 'recommend' },
+  { label: t('typeLabels.nearby'), value: 'nearby' },
+  { label: t('typeLabels.food'), value: 'food' },
+  { label: t('typeLabels.travel'), value: 'travel' },
+  { label: t('typeLabels.beauty'), value: 'beauty' }
+]);
 
-const privacyColumns = [
-  { label: '公开·所有人可见', value: 'public' },
-  { label: '私密·仅自己可见', value: 'private' },
-  { label: '好友·互相关注可见', value: 'friends' }
-];
+const privacyColumns = computed(() => [
+  { label: t('post.privacyPublic'), value: 'public' },
+  { label: t('post.privacyPrivate'), value: 'private' },
+  { label: t('post.privacyFriends'), value: 'friends' }
+]);
 
 // ===== 富文本编辑器 =====
 let editorCtx: any = null;
@@ -276,13 +279,13 @@ const isValid = computed(() => {
 });
 
 const typeLabel = computed(() => {
-  if (!form.types.length) return '请选择';
-  return form.types.map(v => typeColumns.find(c => c.value === v)?.label).filter(Boolean).join('、');
+  if (!form.types.length) return t('post.categoryPlaceholder');
+  return form.types.map(v => typeColumns.value.find(c => c.value === v)?.label).filter(Boolean).join('、');
 });
 
 const privacyLabel = computed(() => {
-  const item = privacyColumns.find(col => col.value === form.privacy);
-  return item ? item.label : '公开';
+  const item = privacyColumns.value.find(col => col.value === form.privacy);
+  return item ? item.label : t('post.privacyPublic');
 });
 
 onMounted(() => {
@@ -307,7 +310,7 @@ const goBack = () => uni.navigateBack();
 function triggerUpload() {
   const left = 9 - fileList.value.length;
   if (left <= 0) {
-    uni.showToast({ title: '最多9张', icon: 'none' });
+    uni.showToast({ title: t('post.photoMax'), icon: 'none' });
     return;
   }
   uni.chooseImage({
@@ -323,15 +326,15 @@ function triggerUpload() {
 async function addAndUploadFiles(paths: string[]) {
   const start = fileList.value.length;
   paths.forEach(() => {
-    fileList.value.push({ status: 'uploading', message: '上传中', url: '' });
+    fileList.value.push({ status: 'uploading', message: t('post.uploading'), url: '' });
   });
   for (let i = 0; i < paths.length; i++) {
     try {
       const url = await uploadFilePromise(paths[i]);
       fileList.value[start + i] = { status: 'success', message: '', url };
     } catch (_) {
-      fileList.value[start + i] = { status: 'failed', message: '失败', url: '' };
-      uni.showToast({ title: '第' + (i + 1) + '张上传失败', icon: 'none' });
+      fileList.value[start + i] = { status: 'failed', message: t('post.uploadFail'), url: '' };
+      uni.showToast({ title: t('post.uploadFail'), icon: 'none' });
     }
   }
 }
@@ -427,12 +430,12 @@ const handlePublish = async () => {
       tags: form.tags?.length ? form.tags : undefined,
       type: form.types[0] || 'recommend',
       privacy: form.privacy,
-      lang: 'zh'
+      lang: getStoredLang()
     });
-    uni.showToast({ title: '发布成功', icon: 'success' });
+    uni.showToast({ title: t('post.publishSuccess'), icon: 'success' });
     setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000);
   } catch (_) {
-    uni.showToast({ title: '发布失败', icon: 'none' });
+    uni.showToast({ title: t('post.publishFail'), icon: 'none' });
   } finally {
     loading.value = false;
   }

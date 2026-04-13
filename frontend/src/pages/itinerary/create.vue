@@ -7,7 +7,7 @@
         <view class="back-btn" @click="uni.navigateBack()">
           <text class="back-icon">‹</text>
         </view>
-        <text class="topbar-title">创建新行程</text>
+        <text class="topbar-title">{{ t('itinerary.create') }}</text>
         <view class="placeholder-right"></view>
       </view>
     </view>
@@ -109,7 +109,10 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useItineraryStore } from '@/stores/itinerary';
+
+const { t } = useI18n();
 
 const itineraryStore = useItineraryStore();
 const loading = ref(false);

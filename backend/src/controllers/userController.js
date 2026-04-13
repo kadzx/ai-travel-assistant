@@ -122,7 +122,7 @@ const userController = {
   // Body: { nickname, avatar, bio } — avatar 可为 data URL (base64) 或旧版 URL
   updateProfile: asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const { nickname, avatar, bio } = req.body;
+    const { nickname, avatar, bio, preferred_lang } = req.body;
 
     const user = await User.findByPk(userId);
     if (!user) {
@@ -131,6 +131,9 @@ const userController = {
 
     if (nickname !== undefined) user.nickname = nickname;
     if (bio !== undefined) user.bio = bio;
+    if (preferred_lang !== undefined && (preferred_lang === 'zh' || preferred_lang === 'en')) {
+      user.preferred_lang = preferred_lang;
+    }
 
     if (avatar !== undefined) {
       const MAX_AVATAR_BASE64_LEN = 7 * 1024 * 1024; // ~5MB 原始图对应 base64 约 6.67MB

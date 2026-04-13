@@ -32,4 +32,43 @@ router.post('/route', asyncHandler(async (req, res) => {
   return ResponseUtil.success(res, result);
 }));
 
+// POST /api/map/route-batch — 批量路线规划（相邻点对，并行请求）
+router.post('/route-batch', asyncHandler(async (req, res) => {
+  const { points, mode = 'walking' } = req.body;
+
+  if (!Array.isArray(points) || points.length < 2) {
+    return ResponseUtil.error(res, '至少需要2个坐标点', 400);
+  }
+
+  // 并行请求所有段
+  const promises = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const from = points[i];
+    const to = points[i + 1];
+    if (!from.lat || !from.lng || !to.lat || !to.lng) {
+      promises.push(Promise.resolve({ distance: 0, duration: 0, points: [] }));
+      continue;
+    }
+    promises.push(
+      mapService.planRoute(from.lat, from.lng, to.lat, to.lng, mode, '')
+        .then(result => ({
+          distance: result.distance || 0,
+          duration: result.duration || 0,
+          points: result.points || []
+        }))
+        .catch(() => ({
+          distance: 0,
+          duration: 0,
+          points: [
+            { latitude: from.lat, longitude: from.lng },
+            { latitude: to.lat, longitude: to.lng }
+          ]
+        }))
+    );
+  }
+
+  const segments = await Promise.all(promises);
+  return ResponseUtil.success(res, { segments });
+}));
+
 module.exports = router;

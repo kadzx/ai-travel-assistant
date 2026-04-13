@@ -55,6 +55,12 @@ const User = sequelize.define(
       allowNull: true,
       comment: "Bio / 简介",
     },
+    preferred_lang: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      defaultValue: "zh",
+      comment: "Preferred Language / 偏好语言 (zh, en)",
+    },
   },
   {
     tableName: "users",

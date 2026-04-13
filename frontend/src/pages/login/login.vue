@@ -4,8 +4,8 @@
     <view class="top-decoration">
       <view class="arc-bg"></view>
       <view class="top-icon">🧳</view>
-      <text class="top-title">{{ currentTab === 0 ? '欢迎回来 👋' : '开启旅程 🎒' }}</text>
-      <text class="top-subtitle">{{ currentTab === 0 ? '登录后解锁 AI 行程规划' : '注册开始你的旅行之旅' }}</text>
+      <text class="top-title">{{ currentTab === 0 ? t('login.welcomeBack') : t('login.startJourney') }}</text>
+      <text class="top-subtitle">{{ currentTab === 0 ? t('login.loginSubtitle') : t('login.registerSubtitle') }}</text>
     </view>
 
     <!-- Tab 切换 -->
@@ -16,14 +16,14 @@
           :class="{ active: currentTab === 0 }"
           @click="handleTabChange(0)"
         >
-          <text>登录</text>
+          <text>{{ t('login.tabLogin') }}</text>
         </view>
         <view 
           class="tab-item"
           :class="{ active: currentTab === 1 }"
           @click="handleTabChange(1)"
         >
-          <text>注册</text>
+          <text>{{ t('login.tabRegister') }}</text>
         </view>
         <!-- 滑动指示器 -->
         <view class="tab-indicator" :style="{ left: currentTab === 0 ? '4px' : '50%' }"></view>
@@ -40,7 +40,7 @@
           <u-form-item prop="username" borderBottom="false" class="form-item-inner">
             <u-input
               v-model="form.username"
-              placeholder="请输入昵称"
+              :placeholder="t('login.username')"
               border="none"
               clearable
               fontSize="15px"
@@ -55,7 +55,7 @@
           <u-form-item prop="email" borderBottom="false" class="form-item-inner">
             <u-input
               v-model="form.email"
-              placeholder="请输入邮箱"
+              :placeholder="t('login.email')"
               border="none"
               clearable
               fontSize="15px"
@@ -71,7 +71,7 @@
             <u-input
               v-model="form.password"
               type="password"
-              placeholder="请输入密码"
+              :placeholder="t('login.password')"
               border="none"
               clearable
               fontSize="15px"
@@ -87,7 +87,7 @@
             <u-input
               v-model="form.confirmPassword"
               type="password"
-              placeholder="请确认密码"
+              :placeholder="t('login.confirmPassword')"
               border="none"
               clearable
               fontSize="15px"
@@ -103,7 +103,7 @@
         :disabled="loading"
         @click="handleSubmit"
       >
-        <text v-if="!loading">{{ currentTab === 0 ? '登录' : '立即注册' }}</text>
+        <text v-if="!loading">{{ currentTab === 0 ? t('login.loginBtn') : t('login.registerBtn') }}</text>
         <u-loading-icon v-else color="#ffffff" mode="circle"></u-loading-icon>
       </button>
 
@@ -140,6 +140,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue";
 import { useUserStore } from "@/stores/user";
+import { useI18n } from 'vue-i18n';
 // @ts-ignore
 import UForm from "uview-plus/components/u-form/u-form.vue";
 // @ts-ignore
@@ -152,6 +153,7 @@ import UIcon from "uview-plus/components/u-icon/u-icon.vue";
 import ULoadingIcon from "uview-plus/components/u-loading-icon/u-loading-icon.vue";
 
 const userStore = useUserStore();
+const { t } = useI18n();
 const uForm = ref();
 const currentTab = ref(0);
 const loading = ref(false);

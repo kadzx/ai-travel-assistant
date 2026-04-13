@@ -4,7 +4,7 @@
     <view class="top-bar">
       <view class="top-bar-inner">
         <view style="width: 32px;"></view>
-        <text class="top-title">AI 助手</text>
+        <text class="top-title">{{ t('chat.title') }}</text>
         <view class="online-dot"></view>
       </view>
     </view>
@@ -24,25 +24,25 @@
         </view>
         <!-- 欢迎气泡 -->
         <view class="welcome-bubble">
-          <text class="welcome-text">你好呀～ 我是你的 AI 旅行助手，告诉我你想去哪里吧！</text>
+          <text class="welcome-text">{{ t('chat.welcome') }}</text>
         </view>
         <!-- 快捷提示词卡片 2x2 -->
         <view class="prompt-grid">
-          <view class="prompt-card prompt-card-pink" @click="sendMessage('帮我规划京都3天行程')">
+          <view class="prompt-card prompt-card-pink" @click="sendMessage(t('chat.prompt1'))">
             <text class="prompt-emoji">🗼</text>
-            <text class="prompt-text">帮我规划京都3天行程</text>
+            <text class="prompt-text">{{ t('chat.prompt1') }}</text>
           </view>
-          <view class="prompt-card prompt-card-blue" @click="sendMessage('推荐东南亚海岛度假')">
+          <view class="prompt-card prompt-card-blue" @click="sendMessage(t('chat.prompt2'))">
             <text class="prompt-emoji">🏖</text>
-            <text class="prompt-text">推荐东南亚海岛度假</text>
+            <text class="prompt-text">{{ t('chat.prompt2') }}</text>
           </view>
-          <view class="prompt-card prompt-card-green" @click="sendMessage('国内小众旅行地推荐')">
+          <view class="prompt-card prompt-card-green" @click="sendMessage(t('chat.prompt3'))">
             <text class="prompt-emoji">🎒</text>
-            <text class="prompt-text">国内小众旅行地推荐</text>
+            <text class="prompt-text">{{ t('chat.prompt3') }}</text>
           </view>
-          <view class="prompt-card prompt-card-yellow" @click="sendMessage('成都美食之旅攻略')">
+          <view class="prompt-card prompt-card-yellow" @click="sendMessage(t('chat.prompt4'))">
             <text class="prompt-emoji">🍜</text>
-            <text class="prompt-text">成都美食之旅攻略</text>
+            <text class="prompt-text">{{ t('chat.prompt4') }}</text>
           </view>
         </view>
       </view>
@@ -74,13 +74,13 @@
                     <text class="thinking-icon">🧠</text>
                     <text class="thinking-title">{{ collapsibleTitle(msg) }}</text>
                   </view>
-                  <text class="thinking-toggle">{{ msg.thinkingExpanded ? '收起' : '展开' }}</text>
+                  <text class="thinking-toggle">{{ msg.thinkingExpanded ? t('chat.collapse') : t('chat.expand') }}</text>
                 </view>
                 <view v-show="msg.thinkingExpanded" class="thinking-body">
                   <text v-if="msg.thinking" class="thinking-text">{{ msg.thinking }}</text>
                   <text v-if="msg.streamingSummary" class="thinking-text mt-2">{{ msg.streamingSummary }}</text>
                   <text v-if="formatItineraryReadable(msg.itineraryData)" class="thinking-text mt-2">{{ formatItineraryReadable(msg.itineraryData) }}</text>
-                  <text v-if="msg.isLoading && !msg.thinking && !msg.streamingSummary && !formatItineraryReadable(msg.itineraryData)" class="thinking-text thinking-loading">思考中...</text>
+                  <text v-if="msg.isLoading && !msg.thinking && !msg.streamingSummary && !formatItineraryReadable(msg.itineraryData)" class="thinking-text thinking-loading">{{ t('chat.thinking') }}</text>
                 </view>
               </view>
 
@@ -101,17 +101,17 @@
                 <view class="itinerary-content">
                   <view class="itinerary-header">
                     <text class="itinerary-icon">🗺</text>
-                    <text class="itinerary-title">{{ msg.itineraryData.title || msg.itineraryData.destination || '旅行行程' }}</text>
+                    <text class="itinerary-title">{{ msg.itineraryData.title || msg.itineraryData.destination || t('chat.itineraryDefault') }}</text>
                   </view>
                   <view v-if="msg.itineraryData.summary?.totalDays" class="itinerary-tag">
-                    <text class="itinerary-tag-text">{{ msg.itineraryData.summary.totalDays }}天行程</text>
+                    <text class="itinerary-tag-text">{{ msg.itineraryData.summary.totalDays }}{{ t('chat.dayTrip') }}</text>
                   </view>
                   <view class="itinerary-actions">
                     <view class="itinerary-btn-detail" @click="saveItineraryFromMessage(msg)">
-                      <text class="itinerary-btn-text">查看详情</text>
+                      <text class="itinerary-btn-text">{{ t('chat.viewDetail') }}</text>
                     </view>
                     <view class="itinerary-btn-save" @click="saveItineraryFromMessage(msg)">
-                      <text class="itinerary-btn-save-text">保存行程 ✨</text>
+                      <text class="itinerary-btn-save-text">{{ t('chat.saveItinerary') }}</text>
                     </view>
                   </view>
                 </view>
@@ -133,7 +133,7 @@
         <textarea
           v-model="inputContent"
           class="input-field"
-          placeholder="输入你的旅行想法..."
+          :placeholder="t('chat.placeholder')"
           placeholder-class="input-placeholder"
           :auto-height="true"
           :show-confirm-bar="false"
@@ -153,12 +153,14 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '@/stores/user';
 import { startSession, sendMessageStream, getHistory } from '@/api/chat';
 import { saveItinerary } from '@/api/itinerary';
 // @ts-ignore
 import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
 
+const { t } = useI18n();
 const userStore = useUserStore();
 const inputContent = ref('');
 const scrollTarget = ref('');
@@ -210,7 +212,7 @@ const initSession = async () => {
     console.error('Init session failed', e);
     const msg = (e?.errMsg || e?.message || '').toString();
     if (msg.includes('fail') || msg.includes('refused') || msg.includes('network')) {
-      uni.showToast({ title: '无法连接服务器，请确保后端已启动 (localhost:3000)', icon: 'none', duration: 3000 });
+      uni.showToast({ title: t('chat.serverError'), icon: 'none', duration: 3000 });
     }
   }
 };
@@ -284,11 +286,11 @@ const doSendMessage = (text: string) => {
       const msg = messages.value[lastIdx];
       if (msg && msg.role === 'assistant') {
         msg.isLoading = false;
-        msg.content = err?.message || '网络连接失败，请检查您的网络。';
+        msg.content = err?.message || t('chat.networkError');
       }
       isSending.value = false;
       scrollToBottom();
-      uni.showToast({ title: err?.message || '请求失败', icon: 'none' });
+      uni.showToast({ title: err?.message || t('chat.requestFail'), icon: 'none' });
     }
   );
 };

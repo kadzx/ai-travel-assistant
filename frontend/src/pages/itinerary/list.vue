@@ -7,7 +7,7 @@
         <view class="back-btn" @click="goBack">
           <text class="back-icon">‹</text>
         </view>
-        <text class="topbar-title">我的行程 🗺️</text>
+        <text class="topbar-title">{{ t('itinerary.myList') }} 🗺️</text>
         <view class="add-btn" @click="goToCreate">
           <text class="add-icon">+</text>
         </view>
@@ -24,8 +24,8 @@
       <view class="empty-illustration">
         <text class="emoji-group">🧳🗺️🧭</text>
       </view>
-      <text class="empty-title">还没有行程呢~</text>
-      <text class="empty-subtitle">用 AI 规划你的第一次旅行吧</text>
+      <text class="empty-title">{{ t('itinerary.emptyNodes') }}</text>
+      <text class="empty-subtitle">{{ t('itinerary.create') }}</text>
       <view class="empty-actions">
         <view class="btn-outline" @click="goToCreate">
           <text class="btn-outline-text">🔍 去探索</text>
@@ -89,7 +89,10 @@
 
 <script setup lang="ts">
 import { onShow } from '@dcloudio/uni-app';
+import { useI18n } from 'vue-i18n';
 import { useItineraryStore } from '@/stores/itinerary';
+
+const { t } = useI18n();
 
 const itineraryStore = useItineraryStore();
 
@@ -164,10 +167,10 @@ function getProgress(item: any) {
 
 function getProgressText(item: any) {
   const nodes = getNodes(item);
-  if (!nodes.length) return '暂无景点数据';
+  if (!nodes.length) return t('itinerary.emptyNodes');
   const done = nodes.filter((n: any) => n.status === 'done').length;
   const pct = Math.round((done / nodes.length) * 100);
-  return `已完成 ${done}/${nodes.length} 个景点  ${pct}%`;
+  return `${done}/${nodes.length}  ${pct}%`;
 }
 
 function getNextSpot(item: any): string {

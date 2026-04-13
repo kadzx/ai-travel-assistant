@@ -88,6 +88,9 @@ const startServer = async () => {
     } catch (alterErr) {
       if (alterErr.name !== 'SequelizeDatabaseError') console.warn('avatar 列升级跳过:', alterErr.message);
     }
+    // 为 users 表补充 preferred_lang 字段
+    await addColumnIfNotExists('users', 'preferred_lang',
+      "ALTER TABLE users ADD COLUMN preferred_lang VARCHAR(10) NOT NULL DEFAULT 'zh' COMMENT '偏好语言 (zh, en)'");
     console.log('数据库连接成功并已同步模型');
     
     app.listen(PORT, () => {

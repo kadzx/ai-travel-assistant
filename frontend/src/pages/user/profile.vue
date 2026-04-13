@@ -19,10 +19,10 @@
             @error="onHeaderAvatarError"
           />
         </view>
-        <text class="nickname">{{ userStore.userInfo?.username || '未登录' }}</text>
-        <text class="bio">{{ userStore.userInfo?.bio || '✨ 热爱生活，分享美好' }}</text>
+        <text class="nickname">{{ userStore.userInfo?.username || t('user.notLoggedIn') }}</text>
+        <text class="bio">{{ userStore.userInfo?.bio || t('user.defaultBio') }}</text>
         <view class="edit-btn" @click="goToEditProfile">
-          <text class="edit-btn-text">编辑资料</text>
+          <text class="edit-btn-text">{{ t('user.editProfile') }}</text>
         </view>
       </view>
     </view>
@@ -31,22 +31,22 @@
     <view class="stats-card">
       <view class="stat-item">
         <text class="stat-num">{{ userStore.userInfo?.stats?.receivedLikesCount ?? 0 }}</text>
-        <text class="stat-label">帖子</text>
+        <text class="stat-label">{{ t('user.posts') }}</text>
       </view>
       <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-num">{{ userStore.userInfo?.stats?.receivedLikesCount ?? 0 }}</text>
-        <text class="stat-label">获赞</text>
+        <text class="stat-label">{{ t('user.likes') }}</text>
       </view>
       <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-num">{{ userStore.userInfo?.stats?.followingCount ?? 0 }}</text>
-        <text class="stat-label">关注</text>
+        <text class="stat-label">{{ t('user.following') }}</text>
       </view>
       <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-num">{{ userStore.userInfo?.stats?.followerCount ?? 0 }}</text>
-        <text class="stat-label">粉丝</text>
+        <text class="stat-label">{{ t('user.followers') }}</text>
       </view>
     </view>
 
@@ -56,7 +56,7 @@
         <view class="func-icon" style="background: #FFF0E6;">
           <text class="func-emoji">📋</text>
         </view>
-        <text class="func-name">我的行程</text>
+        <text class="func-name">{{ t('user.myItinerary') }}</text>
         <view class="func-right">
           <view class="func-badge" v-if="userStore.userInfo?.stats?.postsCount">
             <text class="func-badge-text">{{ userStore.userInfo?.stats?.postsCount }}</text>
@@ -69,17 +69,17 @@
         <view class="func-icon" style="background: #E8F4FD;">
           <text class="func-emoji">👁</text>
         </view>
-        <text class="func-name">查看主页</text>
+        <text class="func-name">{{ t('user.viewHome') }}</text>
         <view class="func-right">
           <u-icon name="arrow-right" size="16" color="#C4C4C4"></u-icon>
         </view>
       </view>
       <view class="func-divider"></view>
-      <view class="func-item">
+      <view class="func-item" @click="goToSettings">
         <view class="func-icon" style="background: #F0F0F0;">
           <text class="func-emoji">⚙️</text>
         </view>
-        <text class="func-name">设置</text>
+        <text class="func-name">{{ t('user.settings') }}</text>
         <view class="func-right">
           <u-icon name="arrow-right" size="16" color="#C4C4C4"></u-icon>
         </view>
@@ -130,8 +130,8 @@
         <view class="empty-icon-wrap">
           <u-icon name="empty-data" size="48" color="#E8A87C"></u-icon>
         </view>
-        <text class="empty-text">这里空空如也</text>
-        <view class="empty-btn" @click="uni.switchTab({url:'/pages/index/index'})">去发现更多精彩</view>
+        <text class="empty-text">{{ t('user.emptyText') }}</text>
+        <view class="empty-btn" @click="uni.switchTab({url:'/pages/index/index'})">{{ t('user.emptyAction') }}</view>
       </view>
     </view>
 
@@ -146,12 +146,14 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
 import { useUserStore } from "@/stores/user";
+import { useI18n } from 'vue-i18n';
 // @ts-ignore
 import UIcon from "uview-plus/components/u-icon/u-icon.vue";
 import { request } from "@/utils/request";
 import { getDisplayImageUrl } from "@/utils/imageProxy";
 
 const userStore = useUserStore();
+const { t } = useI18n();
 const currentTab = ref(0);
 const postList = ref<any[]>([]);
 
@@ -172,7 +174,7 @@ const tabs = [
   { name: "赞过", type: "likes" },
 ];
 
-const tabsDisplay = ["📝 笔记", "⭐ 收藏", "❤️ 赞过"];
+const tabsDisplay = computed(() => [t('user.tabPosts'), t('user.tabFavorites'), t('user.tabLikes')]);
 
 const loadData = async () => {
   try {
@@ -217,6 +219,10 @@ const goToPublicHome = () => {
 
 const goToItinerary = () => {
   uni.navigateTo({ url: '/pages/itinerary/list' });
+};
+
+const goToSettings = () => {
+  uni.navigateTo({ url: '/pages/settings/index' });
 };
 
 onMounted(() => {

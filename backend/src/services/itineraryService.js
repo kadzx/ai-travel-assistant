@@ -242,6 +242,37 @@ class ItineraryService {
         where: { id, user_id: userId }
       });
       if (!itinerary) return null;
+
+      // 自动补全缺失经纬度
+      const content = itinerary.content;
+      const nodes = content?.nodes || [];
+      const dest = content?.destination || '';
+      const needFill = nodes.filter(n => (!n.latitude || !n.longitude) && (n.title || n.location));
+      if (needFill.length > 0) {
+        try {
+          const enriched = await mapService.enrichNodesWithCoords(needFill, dest);
+          const enrichedMap = {};
+          enriched.forEach(n => { if (n.id) enrichedMap[n.id] = n; });
+          let changed = false;
+          nodes.forEach(n => {
+            const e = enrichedMap[n.id];
+            if (e && e.latitude && e.longitude) {
+              n.latitude = e.latitude;
+              n.longitude = e.longitude;
+              if (e.address) n.address = e.address;
+              changed = true;
+            }
+          });
+          if (changed) {
+            itinerary.content = { ...content, nodes };
+            await itinerary.save();
+            logger.info(`[getDetail] Auto-filled coords for ${needFill.length} nodes in itinerary ${id}`);
+          }
+        } catch (geoErr) {
+          logger.warn('[getDetail] fillMissingCoords failed:', geoErr.message);
+        }
+      }
+
       const plain = itinerary.toJSON();
       plain.content = normalizeLinearContent(plain.content, {
         startDate: plain.start_date,

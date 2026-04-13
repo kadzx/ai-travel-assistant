@@ -7,6 +7,14 @@
 	},
 	"pages": [
 		{
+			"path": "pages/lang/choose",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
 			"path": "pages/welcome/welcome",
 			"style": {
 				"navigationBarTitleText": "",
@@ -114,6 +122,15 @@
 			}
 		},
 		{
+			"path": "pages/itinerary/editNode",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "编辑节点",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
 			"path": "pages/user/home",
 			"style": {
 				"navigationStyle": "custom",
@@ -124,6 +141,15 @@
 		},
 		{
 			"path": "pages/common/chooseLocation",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/settings/index",
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "",

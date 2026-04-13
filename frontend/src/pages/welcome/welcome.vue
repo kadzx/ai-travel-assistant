@@ -21,18 +21,18 @@
       <!-- 品牌名 -->
       <view class="brand-area animate-fade-in-up delay-300">
         <text class="brand-name">AI Travel ✈️</text>
-        <text class="brand-slogan">你的 AI 旅行伙伴</text>
-        <text class="brand-sub">发现世界，从一次对话开始</text>
+        <text class="brand-slogan">{{ t('welcome.slogan') }}</text>
+        <text class="brand-sub">{{ t('welcome.sub') }}</text>
       </view>
 
       <!-- 按钮区 -->
       <view class="btn-area animate-fade-in-up delay-500">
         <button class="start-btn" @click="handleStart">
-          <text>开始探索</text>
+          <text>{{ t('welcome.start') }}</text>
           <text class="btn-arrow">→</text>
         </button>
         <view class="login-link" @click="handleLogin">
-          <text class="login-text">已有账号？<text class="login-highlight">登录</text></text>
+          <text class="login-text">{{ t('welcome.hasAccount') }}<text class="login-highlight">{{ t('welcome.login') }}</text></text>
         </view>
       </view>
     </view>
@@ -41,7 +41,9 @@
 
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const userStore = useUserStore();
 
 const handleStart = () => {

@@ -29,16 +29,19 @@
 <script setup lang="ts">
 // @ts-ignore
 import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{ current: string }>();
 const currentPath = props.current;
 
-const tabs = [
-  { path: '/pages/index/index', icon: 'home', activeIcon: 'home-fill', text: '首页', isPublish: false },
-  { path: '/pages/post/create', icon: 'edit-pen', activeIcon: 'edit-pen-fill', text: '发布', isPublish: true },
-  { path: '/pages/chat/chat', icon: 'chat', activeIcon: 'chat-fill', text: 'AI对话', isPublish: false },
-  { path: '/pages/user/profile', icon: 'account', activeIcon: 'account-fill', text: '我的', isPublish: false },
-];
+const tabs = computed(() => [
+  { path: '/pages/index/index', icon: 'home', activeIcon: 'home-fill', text: t('tabbar.home'), isPublish: false },
+  { path: '/pages/post/create', icon: 'edit-pen', activeIcon: 'edit-pen-fill', text: t('tabbar.publish'), isPublish: true },
+  { path: '/pages/chat/chat', icon: 'chat', activeIcon: 'chat-fill', text: t('tabbar.chat'), isPublish: false },
+  { path: '/pages/user/profile', icon: 'account', activeIcon: 'account-fill', text: t('tabbar.me'), isPublish: false },
+]);
 
 const switchTab = (tab: typeof tabs[0]) => {
   if (tab.path === currentPath) return;
