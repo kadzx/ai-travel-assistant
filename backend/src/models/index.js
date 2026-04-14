@@ -10,6 +10,7 @@ const Favorite = require('./Favorite');
 const FavoriteFolder = require('./FavoriteFolder');
 const Follow = require('./Follow');
 const Notification = require('./Notification');
+const Report = require('./Report');
 
 // 定义关联关系 / Define Associations
 
@@ -118,6 +119,10 @@ Like.belongsTo(Post, {
   as: 'post'
 });
 
+// User <-> Report
+User.hasMany(Report, { foreignKey: 'user_id', as: 'reports' });
+Report.belongsTo(User, { foreignKey: 'user_id', as: 'reporter' });
+
 // 导出模型和 Sequelize 实例
 module.exports = {
   sequelize,
@@ -131,5 +136,6 @@ module.exports = {
   Favorite,
   FavoriteFolder,
   Follow,
-  Notification
+  Notification,
+  Report
 };

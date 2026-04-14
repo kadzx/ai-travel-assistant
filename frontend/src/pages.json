@@ -30,6 +30,14 @@
 			}
 		},
 		{
+			"path": "pages/login/reset-password",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "找回密码",
+				"navigationBarBackgroundColor": "#FFF8F0"
+			}
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationStyle": "custom",
@@ -109,7 +117,9 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "我的行程",
 				"navigationBarBackgroundColor": "#FFF8F0",
-				"navigationBarTextStyle": "black"
+				"navigationBarTextStyle": "black",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
 			}
 		},
 		{
@@ -176,12 +186,6 @@
 				"text": "行程",
 				"iconPath": "static/tabbar/home.png",
 				"selectedIconPath": "static/tabbar/home-active.png"
-			},
-			{
-				"pagePath": "pages/post/create",
-				"text": "发布",
-				"iconPath": "static/tabbar/plus.png",
-				"selectedIconPath": "static/tabbar/plus.png"
 			},
 			{
 				"pagePath": "pages/chat/chat",

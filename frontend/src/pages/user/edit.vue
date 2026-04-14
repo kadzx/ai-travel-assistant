@@ -109,7 +109,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { useUserStore } from '@/stores/user';
-import { request } from '@/utils/request';
+import { request, BASE_URL } from '@/utils/request';
 
 const userStore = useUserStore();
 const loading = ref(false);
@@ -120,7 +120,6 @@ const form = reactive({
   bio: ''
 });
 
-// To track changes
 const initialForm = reactive({
   nickname: '',
   avatar: '',
@@ -139,8 +138,6 @@ onMounted(() => {
     form.nickname = nickname || username || '';
     form.avatar = avatar || '';
     form.bio = bio || '';
-    
-    // Save initial state
     Object.assign(initialForm, form);
   }
 });
@@ -161,58 +158,12 @@ const goBack = () => {
   }
 };
 
-const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB 原始文件
-const MAX_AVATAR_DATAURL_LEN = 7 * 1024 * 1024; // base64 后约 6.67MB 上限
-
-function filePathToBase64DataUrl(tempFilePath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    // 非 H5：使用 getFileSystemManager 读文件为 base64
-    const fs = (uni as any).getFileSystemManager?.();
-    if (fs) {
-      const ext = (tempFilePath.split('.').pop() || 'jpg').toLowerCase();
-      const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-      fs.readFile({
-        filePath: tempFilePath,
-        encoding: 'base64',
-        success: (res: any) => {
-          const base64 = (res && res.data) ? res.data : res;
-          resolve(`data:${mime};base64,${base64}`);
-        },
-        fail: (err: any) => reject(err)
-      });
-      return;
-    }
-    // H5：通过 canvas 转 data URL（tempFilePath 多为 blob URL）
-    const img = new (window as any).Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const max = 800;
-      let w = img.naturalWidth || img.width;
-      let h = img.naturalHeight || img.height;
-      if (w > max || h > max) {
-        if (w > h) {
-          h = (h * max) / w;
-          w = max;
-        } else {
-          w = (w * max) / h;
-          h = max;
-        }
-      }
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('canvas'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      resolve(dataUrl);
-    };
-    img.onerror = () => reject(new Error('image load'));
-    img.src = tempFilePath;
-  });
+function getToken(): string {
+  try {
+    const userState = uni.getStorageSync('user');
+    if (userState) return JSON.parse(userState).token || '';
+  } catch (_) {}
+  return '';
 }
 
 const handleUploadAvatar = () => {
@@ -220,27 +171,39 @@ const handleUploadAvatar = () => {
     count: 1,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
-    success: async (res) => {
-      const tempFilePath = res.tempFilePaths[0];
-      const size = (res.tempFiles && res.tempFiles[0]?.size) || 0;
-      if (size > MAX_AVATAR_SIZE) {
+    success: (chooseRes) => {
+      const tempFilePath = chooseRes.tempFilePaths[0];
+      const size = (chooseRes.tempFiles && chooseRes.tempFiles[0]?.size) || 0;
+      if (size > 5 * 1024 * 1024) {
         uni.showToast({ title: '图片不能超过 5MB', icon: 'none' });
         return;
       }
-      uni.showLoading({ title: '处理中...', mask: true });
-      try {
-        const dataUrl = await filePathToBase64DataUrl(tempFilePath);
-        if (dataUrl.length > MAX_AVATAR_DATAURL_LEN) {
-          uni.showToast({ title: '图片不能超过 5MB', icon: 'none' });
-          return;
+      uni.showLoading({ title: '上传中...', mask: true });
+      uni.uploadFile({
+        url: `${BASE_URL}/upload`,
+        filePath: tempFilePath,
+        name: 'file',
+        header: { Authorization: `Bearer ${getToken()}` },
+        success: (uploadRes) => {
+          try {
+            const body = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data;
+            if (body?.data?.url) {
+              form.avatar = body.data.url;
+              uni.showToast({ title: '已选为头像', icon: 'success' });
+            } else {
+              uni.showToast({ title: '上传失败', icon: 'none' });
+            }
+          } catch (_) {
+            uni.showToast({ title: '上传失败', icon: 'none' });
+          }
+        },
+        fail: () => {
+          uni.showToast({ title: '上传失败', icon: 'none' });
+        },
+        complete: () => {
+          uni.hideLoading();
         }
-        form.avatar = dataUrl;
-        uni.showToast({ title: '已选为头像', icon: 'success' });
-      } catch (e) {
-        uni.showToast({ title: '图片读取失败', icon: 'none' });
-      } finally {
-        uni.hideLoading();
-      }
+      });
     }
   });
 };

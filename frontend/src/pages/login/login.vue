@@ -32,7 +32,7 @@
 
     <!-- 表单区 -->
     <view class="form-area">
-      <u-form :model="form" ref="uForm" :rules="rules" :errorType="['toast']">
+      <u-form :model="form" ref="uForm" :rules="rules" errorType="toast">
         
         <!-- 昵称（注册） -->
         <view v-if="currentTab === 1" class="input-card animate-field">
@@ -109,7 +109,7 @@
 
       <!-- 底部链接 -->
       <view class="footer-link" v-if="currentTab === 0">
-        <text class="link-text" @click="uni.showToast({title: '暂未开放', icon: 'none'})">忘记密码?</text>
+        <text class="link-text" @click="uni.navigateTo({url: '/pages/login/reset-password'})">忘记密码?</text>
         <text class="link-primary" @click="handleTabChange(1)">注册账号</text>
       </view>
       <view class="footer-link center" v-else>

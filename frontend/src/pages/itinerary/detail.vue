@@ -17,6 +17,9 @@
               </view>
             </template>
             <template v-else>
+              <view class="bar-btn" @click="handleShare">
+                <text style="font-size: 18px;">📤</text>
+              </view>
               <view class="bar-btn" @click="openCreateNode()">
                 <u-icon name="edit-pen" size="19" color="#95B8A3"></u-icon>
               </view>
@@ -820,6 +823,34 @@ async function loadDetail(id: string) {
   finally { loading.value = false; nextTick(() => fetchRouteSegments()); }
 }
 function goBack() { uni.navigateBack(); }
+
+function handleShare() {
+  const title = itineraryTitle.value || '我的行程';
+  const nodes = sortedNodes.value;
+  const spots = nodes.map((n: any) => n.title || n.location).filter(Boolean).join(' → ');
+  const text = `📍 ${title}\n🗺️ ${spots || '暂无节点'}`;
+
+  // #ifdef H5
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      uni.showToast({ title: '行程已复制到剪贴板', icon: 'success' });
+    }).catch(() => {
+      uni.setClipboardData({ data: text });
+    });
+  } else {
+    uni.setClipboardData({ data: text });
+  }
+  // #endif
+
+  // #ifndef H5
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      uni.showToast({ title: '行程已复制，快去分享吧', icon: 'success' });
+    }
+  });
+  // #endif
+}
 function confirmDeleteItinerary() {
   if (!itineraryId.value) return;
   uni.showModal({

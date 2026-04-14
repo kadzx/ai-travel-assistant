@@ -1,4 +1,5 @@
 import http from '@/utils/request';
+import { withCache, clearCache } from '@/utils/cache';
 
 export interface PublicProfile {
   id: number;
@@ -17,5 +18,13 @@ export interface PublicProfile {
 }
 
 export function getPublicProfile(userId: number | string) {
-  return http.get<PublicProfile>(`/user/${userId}`);
+  return withCache(
+    `user:profile:${userId}`,
+    () => http.get<PublicProfile>(`/user/${userId}`),
+    2 * 60 * 1000
+  );
+}
+
+export function invalidateUserCache(userId?: number | string) {
+  clearCache(userId ? `user:profile:${userId}` : 'user:profile:');
 }

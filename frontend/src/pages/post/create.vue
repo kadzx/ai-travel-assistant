@@ -199,11 +199,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, nextTick, watch, onBeforeUnmount } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useI18n } from 'vue-i18n';
 import { createPost } from '@/api/post';
 import { getStoredLang } from '@/locale';
+import { BASE_URL } from '@/utils/request';
 
 const { t } = useI18n();
 const loading = ref(false);
@@ -224,6 +225,67 @@ const form = reactive({
   tags: [] as string[],
   types: ['recommend'] as string[],
   privacy: 'public'
+});
+
+const DRAFT_KEY = 'post_draft';
+
+function saveDraft() {
+  const hasContent = form.title || form.content || fileList.value.length > 0;
+  if (!hasContent) {
+    uni.removeStorageSync(DRAFT_KEY);
+    return;
+  }
+  try {
+    uni.setStorageSync(DRAFT_KEY, JSON.stringify({
+      form: { ...form },
+      fileList: fileList.value,
+      savedAt: Date.now(),
+    }));
+  } catch (_) {}
+}
+
+function loadDraft() {
+  try {
+    const raw = uni.getStorageSync(DRAFT_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (!draft?.form) return;
+    // 超过 7 天的草稿自动清除
+    if (Date.now() - (draft.savedAt || 0) > 7 * 24 * 3600 * 1000) {
+      uni.removeStorageSync(DRAFT_KEY);
+      return;
+    }
+    uni.showModal({
+      title: '发现草稿',
+      content: '是否恢复上次编辑的内容？',
+      confirmText: '恢复',
+      cancelText: '丢弃',
+      success: (res) => {
+        if (res.confirm) {
+          Object.assign(form, draft.form);
+          fileList.value = draft.fileList || [];
+        }
+        uni.removeStorageSync(DRAFT_KEY);
+      }
+    });
+  } catch (_) {
+    uni.removeStorageSync(DRAFT_KEY);
+  }
+}
+
+// Auto-save draft on content change (debounced)
+let draftTimer: ReturnType<typeof setTimeout> | null = null;
+watch(() => [form.title, form.content, form.tags, fileList.value.length], () => {
+  if (draftTimer) clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 2000);
+}, { deep: true });
+
+onMounted(() => {
+  loadDraft();
+});
+
+onBeforeUnmount(() => {
+  saveDraft();
 });
 
 const typeColumns = computed(() => [
@@ -343,7 +405,7 @@ function uploadFilePromise(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const token = JSON.parse(uni.getStorageSync('user') || '{}').token;
     uni.uploadFile({
-      url: 'http://localhost:3000/api/upload',
+      url: `${BASE_URL}/upload`,
       filePath,
       name: 'file',
       header: { Authorization: `Bearer ${token}` },
@@ -433,6 +495,7 @@ const handlePublish = async () => {
       lang: getStoredLang()
     });
     uni.showToast({ title: t('post.publishSuccess'), icon: 'success' });
+    uni.removeStorageSync(DRAFT_KEY);
     setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 1000);
   } catch (_) {
     uni.showToast({ title: t('post.publishFail'), icon: 'none' });

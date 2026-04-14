@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { onShow } from '@dcloudio/uni-app';
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app';
 import { useI18n } from 'vue-i18n';
 import { useItineraryStore } from '@/stores/itinerary';
 
@@ -181,6 +181,11 @@ function getNextSpot(item: any): string {
 
 onShow(() => {
   itineraryStore.getList();
+});
+
+onPullDownRefresh(async () => {
+  await itineraryStore.getList();
+  uni.stopPullDownRefresh();
 });
 
 const goBack = () => uni.navigateBack();

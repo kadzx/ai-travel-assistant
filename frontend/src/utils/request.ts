@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://localhost:3000/api';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 import i18n from '@/locale';
 
@@ -113,20 +113,23 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
             resolve(res.data as T);
           }
         } else {
-          uni.showToast({
-            title: `${t('common.requestError')}: ${statusCode}`,
-            icon: 'none'
-          });
+          const msg = statusCode >= 500
+            ? '服务器开小差了，请稍后再试'
+            : `${t('common.requestError')}: ${statusCode}`;
+          uni.showToast({ title: msg, icon: 'none' });
           reject(new Error(`HTTP Error ${statusCode}`));
         }
       },
       fail: (err) => {
+        const errMsg = (err as any)?.errMsg || '';
+        const isTimeout = errMsg.includes('timeout');
         uni.showToast({
-          title: t('common.networkError'),
+          title: isTimeout ? '请求超时，请检查网络' : t('common.networkError'),
           icon: 'none'
         });
         reject(err);
-      }
+      },
+      timeout: 15000,
     });
   });
 };

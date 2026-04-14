@@ -5,26 +5,74 @@
       <view class="nav-left" @click="goBack">
         <text class="back-arrow">←</text>
       </view>
-      <view class="nav-center" @click="goToUserHome">
-        <image
-          :src="post.user?.avatar || '/static/logo.png'"
-          class="nav-avatar"
-          mode="aspectFill"
-        />
-        <text class="nav-nickname">{{ post.user?.nickname || post.user?.username }}</text>
-      </view>
-      <view
-        v-if="post.user?.id"
-        class="follow-btn"
-        :class="{ 'follow-btn--followed': isFollowingAuthor }"
-        @click.stop="handleFollowAuthor"
-      >
-        {{ isFollowingAuthor ? '已关注' : '关注' }}
-      </view>
-      <view v-else class="follow-btn-placeholder"></view>
+      <template v-if="pageReady">
+        <view class="nav-center" @click="goToUserHome">
+          <image
+            :src="post.user?.avatar || '/static/logo.png'"
+            class="nav-avatar"
+            mode="aspectFill"
+          />
+          <text class="nav-nickname">{{ post.user?.nickname || post.user?.username }}</text>
+        </view>
+        <view
+          v-if="post.user?.id"
+          class="follow-btn"
+          :class="{ 'follow-btn--followed': isFollowingAuthor }"
+          @click.stop="handleFollowAuthor"
+        >
+          {{ isFollowingAuthor ? '已关注' : '关注' }}
+        </view>
+        <view v-else class="follow-btn-placeholder"></view>
+        <view class="more-btn" @click="showActionMenu">
+          <text class="more-dots">···</text>
+        </view>
+      </template>
+      <template v-else>
+        <view class="nav-center">
+          <view class="skeleton skeleton-circle" style="width:56rpx;height:56rpx;"></view>
+          <view class="skeleton skeleton-text" style="width:120rpx;height:28rpx;"></view>
+        </view>
+        <view class="skeleton skeleton-btn" style="width:100rpx;height:48rpx;border-radius:999rpx;"></view>
+      </template>
     </view>
 
-    <!-- 图片轮播区 -->
+    <!-- ===== 骨架屏 ===== -->
+    <template v-if="!pageReady">
+      <!-- 图片骨架 -->
+      <view class="skeleton skeleton-image" style="width:100%;margin-top:calc(88rpx + var(--status-bar-height, 44px));"></view>
+
+      <!-- 内容骨架卡片 -->
+      <view class="content-card">
+        <view class="skeleton skeleton-text" style="width:65%;height:40rpx;margin-bottom:24rpx;"></view>
+        <view class="skeleton skeleton-text" style="width:100%;height:24rpx;margin-bottom:12rpx;"></view>
+        <view class="skeleton skeleton-text" style="width:100%;height:24rpx;margin-bottom:12rpx;"></view>
+        <view class="skeleton skeleton-text" style="width:80%;height:24rpx;margin-bottom:24rpx;"></view>
+        <view style="display:flex;gap:16rpx;margin-bottom:24rpx;">
+          <view class="skeleton skeleton-text" style="width:100rpx;height:44rpx;border-radius:999rpx;"></view>
+          <view class="skeleton skeleton-text" style="width:80rpx;height:44rpx;border-radius:999rpx;"></view>
+        </view>
+        <view class="skeleton skeleton-text" style="width:40%;height:20rpx;"></view>
+      </view>
+
+      <view class="divider"></view>
+
+      <!-- 评论骨架 -->
+      <view class="comments-section">
+        <view class="skeleton skeleton-text" style="width:140rpx;height:28rpx;margin-bottom:32rpx;"></view>
+        <view v-for="i in 3" :key="'sk-'+i" style="display:flex;gap:20rpx;margin-bottom:40rpx;">
+          <view class="skeleton skeleton-circle" style="width:64rpx;height:64rpx;"></view>
+          <view style="flex:1;">
+            <view class="skeleton skeleton-text" style="width:120rpx;height:22rpx;margin-bottom:12rpx;"></view>
+            <view class="skeleton skeleton-text" style="width:100%;height:24rpx;margin-bottom:8rpx;"></view>
+            <view class="skeleton skeleton-text" style="width:60%;height:24rpx;margin-bottom:8rpx;"></view>
+            <view class="skeleton skeleton-text" style="width:100rpx;height:18rpx;"></view>
+          </view>
+        </view>
+      </view>
+    </template>
+
+    <!-- ===== 真实内容 ===== -->
+    <template v-else>
     <swiper
       class="image-swiper"
       circular
@@ -94,8 +142,8 @@
 
       <view
         class="comment-item"
-        v-for="(comment, index) in commentsList"
-        :key="index"
+        v-for="comment in commentsList"
+        :key="comment.id"
       >
         <image
           :src="comment.user?.avatar || '/static/logo.png'"
@@ -105,10 +153,47 @@
         <view class="comment-body">
           <text class="comment-username">{{ comment.user?.nickname || comment.user?.username }}</text>
           <text class="comment-content">{{ comment.content }}</text>
-          <text class="comment-time">{{ formatPostDate(comment.created_at) }}</text>
-        </view>
-        <view class="comment-like">
-          <u-icon name="heart" size="14" color="#D4A574"></u-icon>
+          <view class="comment-meta">
+            <text class="comment-time">{{ formatPostDate(comment.created_at) }}</text>
+            <text class="comment-reply-btn" @click="openReply(comment)">回复</text>
+          </view>
+
+          <!-- 楼中楼：子评论 -->
+          <view class="replies-block" v-if="comment.replies && comment.replies.length">
+            <view
+              class="reply-item"
+              v-for="reply in comment.replies"
+              :key="reply.id"
+            >
+              <image
+                :src="reply.user?.avatar || '/static/logo.png'"
+                class="reply-avatar"
+                mode="aspectFill"
+              />
+              <view class="reply-body">
+                <view class="reply-header">
+                  <text class="reply-username">{{ reply.user?.nickname || reply.user?.username }}</text>
+                  <template v-if="reply.replyToUser">
+                    <text class="reply-arrow">▸</text>
+                    <text class="reply-target-user">{{ reply.replyToUser.nickname || reply.replyToUser.username }}</text>
+                  </template>
+                </view>
+                <text class="reply-content">{{ reply.content }}</text>
+                <view class="reply-meta">
+                  <text class="reply-time">{{ formatPostDate(reply.created_at) }}</text>
+                  <text class="reply-reply-btn" @click="openReply(comment, reply)">回复</text>
+                </view>
+              </view>
+            </view>
+            <!-- 查看更多回复 -->
+            <view
+              v-if="comment.replyCount > (comment.replies?.length || 0)"
+              class="load-more-replies"
+              @click="loadMoreReplies(comment)"
+            >
+              <text class="load-more-text">展开更多回复 ({{ comment.replyCount - (comment.replies?.length || 0) }} 条)</text>
+            </view>
+          </view>
         </view>
       </view>
 
@@ -117,9 +202,10 @@
         <text class="comments-empty-text">暂无评论，快来抢沙发~</text>
       </view>
     </view>
+    </template>
 
     <!-- 底部固定操作栏 -->
-    <view class="bottom-bar">
+    <view class="bottom-bar" v-if="pageReady">
       <!-- 第一行：互动图标 + 输入框 -->
       <view class="bar-row-1">
         <view class="bar-input" @click="showCommentInput = true">
@@ -208,22 +294,22 @@
     <!-- 评论弹窗 -->
     <u-popup
       :show="showCommentInput"
-      @close="showCommentInput = false"
+      @close="closeCommentPopup"
       mode="bottom"
       :round="24"
       :safeAreaInsetBottom="true"
     >
       <view class="comment-popup">
         <view class="comment-popup-header">
-          <text class="comment-popup-title">发布评论</text>
-          <view class="popup-close" @click="showCommentInput = false">
+          <text class="comment-popup-title">{{ replyTarget ? `回复 @${replyTarget.user?.nickname || replyTarget.user?.username}` : '发布评论' }}</text>
+          <view class="popup-close" @click="closeCommentPopup">
             <text>✕</text>
           </view>
         </view>
         <textarea
           v-model="commentContent"
           class="comment-textarea"
-          placeholder="写下你的想法..."
+          :placeholder="replyTarget ? `回复 ${replyTarget.user?.nickname || replyTarget.user?.username}...` : '写下你的想法...'"
           :show-confirm-bar="false"
           :focus="showCommentInput"
         />
@@ -253,6 +339,8 @@ import {
   toggleFavorite as apiToggleFavorite,
   getComments,
   addComment,
+  getReplies,
+  submitReport,
 } from "@/api/social";
 // @ts-ignore
 import UIcon from "uview-plus/components/u-icon/u-icon.vue";
@@ -265,7 +353,10 @@ const isFollowingAuthor = ref(false);
 const commentsList = ref<any[]>([]);
 const commentContent = ref("");
 const showCommentInput = ref(false);
+const replyTarget = ref<any>(null);
+const replyParentId = ref<number | null>(null);
 const currentSwiperIndex = ref(0);
+const pageReady = ref(false);
 
 const showItineraryPopup = ref(false);
 const generatingItinerary = ref(false);
@@ -378,7 +469,7 @@ const handleToggleFavorite = async () => {
 
 const loadComments = async (id: string) => {
   try {
-    const res: any = await getComments("post", id, { page: 1, limit: 10 });
+    const res: any = await getComments("post", id, { page: 1, limit: 20 });
     if (res && res.list) {
       commentsList.value = res.list;
     }
@@ -387,18 +478,67 @@ const loadComments = async (id: string) => {
   }
 };
 
+const openReply = (comment: any, reply?: any) => {
+  replyParentId.value = comment.id;
+  replyTarget.value = reply || comment;
+  showCommentInput.value = true;
+};
+
+const closeCommentPopup = () => {
+  showCommentInput.value = false;
+  replyTarget.value = null;
+  replyParentId.value = null;
+};
+
+const REPORT_REASONS = ['垃圾广告', '色情低俗', '虚假信息', '侵权内容', '其他'];
+
+const showActionMenu = () => {
+  uni.showActionSheet({
+    itemList: ['举报'],
+    success: (res) => {
+      if (res.tapIndex === 0) showReportMenu();
+    }
+  });
+};
+
+const showReportMenu = () => {
+  uni.showActionSheet({
+    itemList: REPORT_REASONS,
+    success: async (res) => {
+      try {
+        await submitReport({
+          targetId: post.value.id,
+          targetType: 'post',
+          reason: REPORT_REASONS[res.tapIndex],
+        });
+        uni.showToast({ title: '举报已提交', icon: 'success' });
+      } catch (e: any) {
+        const msg = e?.message?.includes('已举报') ? '您已举报过该内容' : '举报失败';
+        uni.showToast({ title: msg, icon: 'none' });
+      }
+    }
+  });
+};
+
 const handleSendComment = async () => {
   if (!commentContent.value.trim()) return;
   try {
-    const res = await addComment({
+    const payload: any = {
       content: commentContent.value,
       targetId: post.value.id,
       targetType: "post",
-    });
+    };
+    if (replyParentId.value) {
+      payload.parentId = replyParentId.value;
+      if (replyTarget.value?.user?.id) {
+        payload.replyToUserId = replyTarget.value.user.id;
+      }
+    }
+    const res = await addComment(payload);
     if (res) {
-      uni.showToast({ title: "评论成功", icon: "success" });
+      uni.showToast({ title: replyParentId.value ? "回复成功" : "评论成功", icon: "success" });
       commentContent.value = "";
-      showCommentInput.value = false;
+      closeCommentPopup();
       loadComments(String(post.value.id));
       post.value.comments++;
     }
@@ -408,7 +548,27 @@ const handleSendComment = async () => {
   }
 };
 
+const loadMoreReplies = async (comment: any) => {
+  try {
+    const currentCount = comment.replies?.length || 0;
+    const page = Math.floor(currentCount / 10) + 1;
+    const res: any = await getReplies(comment.id, { page, limit: 10 });
+    if (res && res.list) {
+      if (page === 1) {
+        comment.replies = res.list;
+      } else {
+        const existingIds = new Set(comment.replies.map((r: any) => r.id));
+        const newReplies = res.list.filter((r: any) => !existingIds.has(r.id));
+        comment.replies = [...comment.replies, ...newReplies];
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const loadPost = async (id: string) => {
+  pageReady.value = false;
   try {
     const res: any = await getPostById(id);
     if (res) {
@@ -435,17 +595,28 @@ const loadPost = async (id: string) => {
       };
       isLiked.value = res.isLiked;
       isFavorited.value = res.isFavorited;
+
+      // 并行加载评论和关注状态，全部就绪后再展示
+      const tasks: Promise<void>[] = [];
+      tasks.push(
+        getComments("post", id, { page: 1, limit: 20 }).then((cRes: any) => {
+          if (cRes && cRes.list) commentsList.value = cRes.list;
+        }).catch(() => {})
+      );
       if (res.user?.id) {
-        try {
-          const check: any = await checkFollow(res.user.id);
-          isFollowingAuthor.value = !!check?.isFollowing;
-        } catch (_) {}
+        tasks.push(
+          checkFollow(res.user.id).then((check: any) => {
+            isFollowingAuthor.value = !!check?.isFollowing;
+          }).catch(() => {})
+        );
       }
-      loadComments(id);
+      await Promise.all(tasks);
+      pageReady.value = true;
     }
   } catch (error) {
     console.error("Load post failed:", error);
     uni.showToast({ title: "加载失败", icon: "none" });
+    pageReady.value = true;
   }
 };
 
@@ -763,6 +934,23 @@ onLoad((options) => {
   width: 100rpx;
 }
 
+.more-btn {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8rpx;
+  flex-shrink: 0;
+}
+
+.more-dots {
+  font-size: 28rpx;
+  color: #8C8C8C;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
 /* ===== 图片轮播 ===== */
 .image-swiper {
   width: 100%;
@@ -1008,6 +1196,112 @@ onLoad((options) => {
   display: block;
   font-size: 20rpx;
   color: #BFBFBF;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-top: 4rpx;
+}
+
+.comment-reply-btn {
+  font-size: 22rpx;
+  color: #D4A574;
+  font-weight: 500;
+}
+
+/* 楼中楼子评论 */
+.replies-block {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  background: #FFF5EE;
+  border-radius: 20rpx;
+}
+
+.reply-item {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.reply-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #FFF0E6;
+  flex-shrink: 0;
+  border: 2rpx solid #FFF0E6;
+}
+
+.reply-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-wrap: wrap;
+  margin-bottom: 6rpx;
+}
+
+.reply-username {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #8C8C8C;
+}
+
+.reply-arrow {
+  font-size: 18rpx;
+  color: #BFBFBF;
+}
+
+.reply-target-user {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #D4A574;
+}
+
+.reply-content {
+  display: block;
+  font-size: 26rpx;
+  color: #3D3D3D;
+  line-height: 1.5;
+}
+
+.reply-meta {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-top: 4rpx;
+}
+
+.reply-time {
+  font-size: 20rpx;
+  color: #BFBFBF;
+}
+
+.reply-reply-btn {
+  font-size: 20rpx;
+  color: #D4A574;
+  font-weight: 500;
+}
+
+.load-more-replies {
+  margin-top: 16rpx;
+  padding: 8rpx 0;
+}
+
+.load-more-text {
+  font-size: 22rpx;
+  color: #D4A574;
+  font-weight: 500;
 }
 
 .comment-like {
@@ -1364,5 +1658,36 @@ onLoad((options) => {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ===== 骨架屏 ===== */
+@keyframes skeleton-pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+
+.skeleton {
+  background: linear-gradient(135deg, #F5EDE4, #FFF0E6, #F5EDE4);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 12rpx;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-text {
+  height: 24rpx;
+}
+
+.skeleton-btn {
+  height: 48rpx;
+}
+
+.skeleton-image {
+  height: 60vh;
+  border-radius: 0;
 }
 </style>

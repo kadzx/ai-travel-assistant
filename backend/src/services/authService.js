@@ -6,7 +6,6 @@ class AuthService {
   async register(data) {
     const { username, email, password } = data;
     
-    // Check if username OR email exists
     const existingUser = await User.findOne({ 
       where: { 
         [require('sequelize').Op.or]: [{ username }, { email }] 
@@ -17,10 +16,8 @@ class AuthService {
       throw new Error('user_exists'); 
     }
 
-    // Hash password is done in Model hook
     const user = await User.create({ username, email, password });
     
-    // Generate token for immediate login after registration
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET || 'secret',
@@ -58,6 +55,21 @@ class AuthService {
       token, 
       user: { id: user.id, username: user.username, role: user.role } 
     };
+  }
+
+  async verifyEmail(email) {
+    const user = await User.findOne({ where: { email } });
+    if (!user) throw new Error('user_not_found');
+    return { userId: user.id, email: user.email, username: user.username };
+  }
+
+  async resetPassword(email, newPassword) {
+    const user = await User.findOne({ where: { email } });
+    if (!user) throw new Error('user_not_found');
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save({ hooks: false });
+    return { success: true };
   }
 }
 

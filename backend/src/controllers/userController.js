@@ -136,16 +136,11 @@ const userController = {
     }
 
     if (avatar !== undefined) {
-      const MAX_AVATAR_BASE64_LEN = 7 * 1024 * 1024; // ~5MB 原始图对应 base64 约 6.67MB
       if (typeof avatar !== 'string' || !avatar.trim()) {
         return ResponseUtil.fail(res, 'param_error', '头像不能为空');
       }
-      if (avatar.startsWith('data:image/') && avatar.includes(';base64,')) {
-        if (avatar.length > MAX_AVATAR_BASE64_LEN) {
-          return ResponseUtil.fail(res, 'param_error', '头像图片不能超过 5MB');
-        }
-      } else if (!avatar.startsWith('http://') && !avatar.startsWith('https://')) {
-        return ResponseUtil.fail(res, 'param_error', '头像格式无效，请使用图片或有效链接');
+      if (!avatar.startsWith('http://') && !avatar.startsWith('https://') && !avatar.startsWith('data:image/')) {
+        return ResponseUtil.fail(res, 'param_error', '头像格式无效，请使用图片链接');
       }
       user.avatar = avatar.trim();
     }

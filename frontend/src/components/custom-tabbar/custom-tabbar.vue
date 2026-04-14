@@ -43,9 +43,13 @@ const tabs = computed(() => [
   { path: '/pages/user/profile', icon: 'account', activeIcon: 'account-fill', text: t('tabbar.me'), isPublish: false },
 ]);
 
-const switchTab = (tab: typeof tabs[0]) => {
+const switchTab = (tab: any) => {
   if (tab.path === currentPath) return;
-  uni.switchTab({ url: tab.path });
+  if (tab.isPublish) {
+    uni.navigateTo({ url: tab.path });
+  } else {
+    uni.switchTab({ url: tab.path });
+  }
 };
 </script>
 

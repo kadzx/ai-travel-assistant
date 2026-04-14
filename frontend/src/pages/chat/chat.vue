@@ -311,35 +311,35 @@ const extractStreamingSummary = (buffer: string): string => {
 
   const lines: string[] = [];
   const destMatch = raw.match(/"destination"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-  if (destMatch) lines.push(`目的地：${destMatch[1]}`);
+  if (destMatch) lines.push(`${t('chat.destination')}：${destMatch[1]}`);
 
   const startMatch = raw.match(/"startDate"\s*:\s*"((?:[^"\\]|\\.)*)"/);
   const endMatch = raw.match(/"endDate"\s*:\s*"((?:[^"\\]|\\.)*)"/);
   if (startMatch || endMatch) {
     const start = startMatch ? startMatch[1] : '—';
     const end = endMatch ? endMatch[1] : '—';
-    lines.push(`出行时间：${start} 至 ${end}`);
+    lines.push(`${t('chat.travelTime')}：${start} ${t('chat.to')} ${end}`);
   }
 
   const budgetMatch = raw.match(/"budgetLevel"\s*:\s*"((?:[^"\\]|\\.)*)"/);
   if (budgetMatch) {
     const level = budgetMatch[1];
-    const levelText = level === 'low' ? '经济' : level === 'high' ? '高端' : '中等';
-    lines.push(`预算：${levelText}`);
+    const levelText = level === 'low' ? t('chat.budgetLow') : level === 'high' ? t('chat.budgetHigh') : t('chat.budgetMid');
+    lines.push(`${t('chat.budget')}：${levelText}`);
   }
 
   const styleMatch = raw.match(/"styleTags"\s*:\s*\[([^\]]*)\]/);
   if (styleMatch && styleMatch[1].trim()) {
     const tags = styleMatch[1].match(/"((?:[^"\\]|\\.)*)"/g);
-    if (tags && tags.length) lines.push(`风格：${tags.map(t => t.slice(1, -1)).join('、')}`);
+    if (tags && tags.length) lines.push(`${t('chat.style')}：${tags.map(s => s.slice(1, -1)).join('、')}`);
   }
 
   const titleMatches = raw.matchAll(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/g);
   const titles = [...titleMatches].map(m => m[1]);
   if (titles.length) {
     lines.push('');
-    lines.push('已识别景点/安排：');
-    titles.forEach((t, i) => lines.push(`· ${i + 1}. ${t}`));
+    lines.push(`${t('chat.identifiedSpots')}：`);
+    titles.forEach((ti, i) => lines.push(`· ${i + 1}. ${ti}`));
   }
 
   if (lines.length === 0) return '';
@@ -349,17 +349,18 @@ const extractStreamingSummary = (buffer: string): string => {
 /** 把行程数据解析成普通人能看懂的文案，不展示 JSON */
 const formatItineraryReadable = (data: any): string => {
   if (!data || typeof data !== 'object' || !Array.isArray(data.nodes)) return '';
-  const dest = data.destination || '目的地';
+  const dest = data.destination || t('chat.destination');
   const start = data.startDate || '';
   const end = data.endDate || '';
-  const days = data.summary?.totalDays || 0;
+  const dayCount = data.summary?.totalDays || 0;
   const total = data.summary?.totalNodes || data.nodes.length;
   const cost = data.summary?.estimatedCost;
   const lines: string[] = [];
-  lines.push('【行程概览】');
-  lines.push(`目的地：${dest}`);
-  if (start || end) lines.push(`出行时间：${start || '—'} 至 ${end || '—'}${days ? `（${days} 天）` : ''}`);
-  lines.push(`共 ${total} 个安排${cost != null ? ` · 预估费用约 ${cost} 元` : ''}`);
+  lines.push(t('chat.overviewTitle'));
+  lines.push(`${t('chat.destination')}：${dest}`);
+  if (start || end) lines.push(`${t('chat.travelTime')}：${start || '—'} ${t('chat.to')} ${end || '—'}${dayCount ? `（${dayCount}${t('chat.days')}）` : ''}`);
+  const costStr = cost != null ? ` · ${t('chat.estimatedCost')} ${cost} ${t('chat.yuan')}` : '';
+  lines.push(`${total}${t('chat.totalArrangements')}${costStr}`);
   lines.push('');
   const byDay: Record<number, typeof data.nodes> = {};
   for (const n of data.nodes) {
@@ -369,12 +370,12 @@ const formatItineraryReadable = (data: any): string => {
   }
   const daysOrder = Object.keys(byDay).map(Number).sort((a, b) => a - b);
   for (const d of daysOrder) {
-    lines.push(`【第 ${d} 天】`);
+    lines.push(t('chat.dayLabel', { n: d }));
     for (const n of byDay[d]) {
       const time = n.timeSlot ? `${n.timeSlot} ` : '';
-      lines.push(`· ${time}${n.title || '行程节点'}`);
-      if (n.location) lines.push(`  地点：${n.location}`);
-      if (n.notes) lines.push(`  备注：${n.notes}`);
+      lines.push(`· ${time}${n.title || t('chat.itineraryDefault')}`);
+      if (n.location) lines.push(`  ${t('chat.spot')}：${n.location}`);
+      if (n.notes) lines.push(`  ${t('chat.remark')}：${n.notes}`);
     }
     lines.push('');
   }
@@ -382,10 +383,10 @@ const formatItineraryReadable = (data: any): string => {
 };
 
 const collapsibleTitle = (msg: Message): string => {
-  if (msg.thinking && formatItineraryReadable(msg.itineraryData)) return '思考过程 · 行程详情';
-  if (msg.streamingSummary && msg.isLoading) return '生成中…';
-  if (formatItineraryReadable(msg.itineraryData)) return '行程安排详情';
-  return '思考过程';
+  if (msg.thinking && formatItineraryReadable(msg.itineraryData)) return t('chat.thinkingAndDetail');
+  if (msg.streamingSummary && msg.isLoading) return t('chat.generating');
+  if (formatItineraryReadable(msg.itineraryData)) return t('chat.itineraryDetail');
+  return t('chat.thinkingProcess');
 };
 
 /** 主气泡展示文案：流式阶段若收到的是 JSON 片段，不直接展示，改为友好提示 */
@@ -393,16 +394,16 @@ const bubbleDisplayContent = (msg: Message): string => {
   if (msg.role !== 'assistant') return msg.content;
   const raw = (msg.content || '').trim();
   const looksLikeJson = raw.startsWith('{') || raw.startsWith('```');
-  if (msg.isLoading && looksLikeJson) return '正在生成行程，请稍候...';
+  if (msg.isLoading && looksLikeJson) return t('chat.generatingItinerary');
   return msg.content || '';
 };
 
 const saveItineraryFromMessage = async (msg: Message) => {
   if (!msg.itineraryData) return;
   try {
-    uni.showLoading({ title: '保存中...' });
+    uni.showLoading({ title: t('chat.saving') });
     const content = msg.itineraryData;
-    const title = content.title || content.destination || 'AI 生成行程';
+    const title = content.title || content.destination || t('chat.aiGenerated');
     const startDate = content.startDate || null;
     const endDate = content.endDate || null;
     const res: any = await saveItinerary({
@@ -412,13 +413,13 @@ const saveItineraryFromMessage = async (msg: Message) => {
       content
     });
     uni.hideLoading();
-    uni.showToast({ title: '已保存为行程', icon: 'success' });
+    uni.showToast({ title: t('chat.saved'), icon: 'success' });
     if (res?.id) {
       uni.navigateTo({ url: `/pages/itinerary/detail?id=${res.id}` });
     }
   } catch (e: any) {
     uni.hideLoading();
-    uni.showToast({ title: e?.message || '保存失败', icon: 'none' });
+    uni.showToast({ title: e?.message || t('chat.saveFailed'), icon: 'none' });
   }
 };
 

@@ -32,7 +32,36 @@
 
     <!-- 瀑布流 -->
     <view class="feed-area">
-      <view class="masonry-columns">
+      <!-- 首次加载骨架屏 -->
+      <view v-if="flowList.length === 0 && loadStatus === 'loading'" class="masonry-columns">
+        <view class="masonry-col">
+          <view v-for="i in 3" :key="'skl-'+i" class="skeleton-card">
+            <view class="skeleton-img" :style="{ height: (i % 2 === 0 ? '200px' : '260px') }"></view>
+            <view style="padding:10px;">
+              <view class="skeleton-line" style="width:80%;height:14px;margin-bottom:8px;"></view>
+              <view style="display:flex;align-items:center;gap:6px;">
+                <view class="skeleton-circle" style="width:20px;height:20px;"></view>
+                <view class="skeleton-line" style="width:50px;height:10px;"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="masonry-col">
+          <view v-for="i in 3" :key="'skr-'+i" class="skeleton-card">
+            <view class="skeleton-img" :style="{ height: (i % 2 === 0 ? '240px' : '180px') }"></view>
+            <view style="padding:10px;">
+              <view class="skeleton-line" style="width:70%;height:14px;margin-bottom:8px;"></view>
+              <view style="display:flex;align-items:center;gap:6px;">
+                <view class="skeleton-circle" style="width:20px;height:20px;"></view>
+                <view class="skeleton-line" style="width:40px;height:10px;"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 真实瀑布流 -->
+      <view v-else class="masonry-columns">
         <view class="masonry-col">
           <view v-for="item in leftList" :key="item.id">
             <MasonryItem :item="item" @click="handleItemClick" @like="handleLike" />
@@ -298,5 +327,32 @@ onPullDownRefreshHook(onPullDownRefresh);
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ===== 骨架屏 ===== */
+@keyframes skeleton-pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+.skeleton-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.skeleton-img {
+  background: linear-gradient(135deg, #F5EDE4, #FFF0E6, #F5EDE4);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+.skeleton-line {
+  background: linear-gradient(135deg, #F5EDE4, #FFF0E6, #F5EDE4);
+  border-radius: 6px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+.skeleton-circle {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F5EDE4, #FFF0E6, #F5EDE4);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 </style>

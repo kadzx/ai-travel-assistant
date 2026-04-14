@@ -46,9 +46,9 @@ const User = sequelize.define(
       comment: "Nickname / 昵称",
     },
     avatar: {
-      type: DataTypes.TEXT("long"),
+      type: DataTypes.STRING(500),
       allowNull: true,
-      comment: "Avatar as data URL (base64) or legacy URL / 头像 Base64 或 URL",
+      comment: "Avatar URL / 头像链接",
     },
     bio: {
       type: DataTypes.STRING,
@@ -69,6 +69,11 @@ const User = sequelize.define(
     hooks: {
       beforeCreate: async (user) => {
         if (user.password) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed('password')) {
           user.password = await bcrypt.hash(user.password, 10);
         }
       },

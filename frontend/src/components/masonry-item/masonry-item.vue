@@ -8,6 +8,7 @@
         mode="widthFix"
         class="item-image"
         :class="imageLoaded ? 'loaded' : ''"
+        lazy-load
         @load="onImageLoad"
         @error="onImageError"
       />

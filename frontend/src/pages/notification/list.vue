@@ -22,6 +22,9 @@
     <scroll-view
       scroll-y
       class="flex-1"
+      refresher-enabled
+      :refresher-triggered="refreshing"
+      @refresherrefresh="onRefresh"
       @scrolltolower="loadMore"
       :lower-threshold="80"
     >
@@ -108,6 +111,7 @@ import { getNotifications, markNotificationRead, markAllRead, type NotificationI
 
 const list = ref<NotificationItem[]>([]);
 const loading = ref(false);
+const refreshing = ref(false);
 const loadStatus = ref<'loadmore' | 'loading' | 'nomore'>('loadmore');
 const page = ref(1);
 const limit = 20;
@@ -167,6 +171,12 @@ const fetchList = async (append: boolean) => {
     if (!append) list.value = [];
     uni.showToast({ title: '加载通知失败', icon: 'none' });
   }
+};
+
+const onRefresh = async () => {
+  refreshing.value = true;
+  await fetchList(false);
+  refreshing.value = false;
 };
 
 function setAllItemsRead() {
