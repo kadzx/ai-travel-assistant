@@ -6,12 +6,24 @@ const itineraryRoutes = require('./itineraryRoutes');
 const chatRoutes = require('./chatRoutes');
 const socialRoutes = require('./socialRoutes');
 const userRoutes = require('./userRoutes');
+const adminRoutes = require('./adminRoutes');
+const postRoutes = require('./postRoutes');
+const uploadRoutes = require('./uploadRoutes');
+const followRoutes = require('./followRoutes');
+const notificationRoutes = require('./notificationRoutes');
+const mapRoutes = require('./mapRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/spots', spotRoutes);
+router.use('/posts', postRoutes);
+router.use('/upload', uploadRoutes);
+router.use('/follow', followRoutes);
 router.use('/itineraries', itineraryRoutes);
 router.use('/chat', chatRoutes);
 router.use('/social', socialRoutes);
 router.use('/user', userRoutes);
+router.use('/admin', adminRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/map', mapRoutes);
 
 module.exports = router;

@@ -1,66 +1,138 @@
 <template>
-  <view class="container">
-    <view class="header">
-      <image src="/static/logo.png" mode="aspectFit" class="logo"></image>
-      <text class="title">智游助手</text>
+  <view class="login-page">
+    <!-- 顶部弧形装饰背景 -->
+    <view class="top-decoration">
+      <view class="arc-bg"></view>
+      <view class="top-icon">🧳</view>
+      <text class="top-title">{{ currentTab === 0 ? t('login.welcomeBack') : t('login.startJourney') }}</text>
+      <text class="top-subtitle">{{ currentTab === 0 ? t('login.loginSubtitle') : t('login.registerSubtitle') }}</text>
     </view>
 
-    <view class="auth-card">
-      <u-tabs
-        :list="tabs"
-        :current="currentTab"
-        @change="handleTabChange"
-        lineColor="#3c9cff"
-        :activeStyle="{ color: '#3c9cff', fontWeight: 'bold' }"
-        itemStyle="height: 44px; flex: 1;"
-      ></u-tabs>
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-inner">
+        <view 
+          class="tab-item" 
+          :class="{ active: currentTab === 0 }"
+          @click="handleTabChange(0)"
+        >
+          <text>{{ t('login.tabLogin') }}</text>
+        </view>
+        <view 
+          class="tab-item"
+          :class="{ active: currentTab === 1 }"
+          @click="handleTabChange(1)"
+        >
+          <text>{{ t('login.tabRegister') }}</text>
+        </view>
+        <!-- 滑动指示器 -->
+        <view class="tab-indicator" :style="{ left: currentTab === 0 ? '4px' : '50%' }"></view>
+      </view>
+    </view>
 
-      <view class="form-content">
-        <u-form :model="form" ref="uForm" :rules="rules" labelWidth="80">
-          <u-form-item label="邮箱" prop="email" borderBottom>
+    <!-- 表单区 -->
+    <view class="form-area">
+      <u-form :model="form" ref="uForm" :rules="rules" errorType="toast">
+        
+        <!-- 昵称（注册） -->
+        <view v-if="currentTab === 1" class="input-card animate-field">
+          <text class="input-emoji">👤</text>
+          <u-form-item prop="username" borderBottom="false" class="form-item-inner">
             <u-input
-              v-model="form.email"
-              placeholder="请输入邮箱"
+              v-model="form.username"
+              :placeholder="t('login.username')"
               border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
             ></u-input>
           </u-form-item>
+        </view>
 
-          <u-form-item label="密码" prop="password" borderBottom>
+        <!-- 邮箱 -->
+        <view class="input-card">
+          <text class="input-emoji">📧</text>
+          <u-form-item prop="email" borderBottom="false" class="form-item-inner">
+            <u-input
+              v-model="form.email"
+              :placeholder="t('login.email')"
+              border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
+            ></u-input>
+          </u-form-item>
+        </view>
+
+        <!-- 密码 -->
+        <view class="input-card">
+          <text class="input-emoji">🔒</text>
+          <u-form-item prop="password" borderBottom="false" class="form-item-inner">
             <u-input
               v-model="form.password"
               type="password"
-              placeholder="请输入密码"
+              :placeholder="t('login.password')"
               border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
             ></u-input>
           </u-form-item>
+        </view>
 
-          <template v-if="currentTab === 1">
-            <u-form-item label="确认密码" prop="confirmPassword" borderBottom>
-              <u-input
-                v-model="form.confirmPassword"
-                type="password"
-                placeholder="请再次输入密码"
-                border="none"
-              ></u-input>
-            </u-form-item>
-            <u-form-item label="昵称" prop="username" borderBottom>
-              <u-input
-                v-model="form.username"
-                placeholder="请输入昵称"
-                border="none"
-              ></u-input>
-            </u-form-item>
-          </template>
-        </u-form>
+        <!-- 确认密码（注册） -->
+        <view v-if="currentTab === 1" class="input-card animate-field">
+          <text class="input-emoji">🔐</text>
+          <u-form-item prop="confirmPassword" borderBottom="false" class="form-item-inner">
+            <u-input
+              v-model="form.confirmPassword"
+              type="password"
+              :placeholder="t('login.confirmPassword')"
+              border="none"
+              clearable
+              fontSize="15px"
+              customStyle="padding: 0; background: transparent;"
+            ></u-input>
+          </u-form-item>
+        </view>
+      </u-form>
 
-        <u-button
-          type="primary"
-          :text="currentTab === 0 ? '立即登录' : '注册账号'"
-          customStyle="margin-top: 30px; border-radius: 25px;"
-          :loading="loading"
-          @click="handleSubmit"
-        ></u-button>
+      <!-- 提交按钮 -->
+      <button 
+        class="submit-btn"
+        :disabled="loading"
+        @click="handleSubmit"
+      >
+        <text v-if="!loading">{{ currentTab === 0 ? t('login.loginBtn') : t('login.registerBtn') }}</text>
+        <u-loading-icon v-else color="#ffffff" mode="circle"></u-loading-icon>
+      </button>
+
+      <!-- 底部链接 -->
+      <view class="footer-link" v-if="currentTab === 0">
+        <text class="link-text" @click="uni.navigateTo({url: '/pages/login/reset-password'})">忘记密码?</text>
+        <text class="link-primary" @click="handleTabChange(1)">注册账号</text>
       </view>
+      <view class="footer-link center" v-else>
+        <text class="link-text">已有账号? <text class="link-primary" @click="handleTabChange(0)">去登录</text></text>
+      </view>
+    </view>
+
+    <!-- 第三方登录 -->
+    <view class="social-area">
+      <view class="divider-row">
+        <view class="divider-line"></view>
+        <text class="divider-text">或</text>
+        <view class="divider-line"></view>
+      </view>
+      <view class="social-icons">
+        <view class="social-btn" @click="uni.showToast({title: '微信登录暂未开放', icon: 'none'})">
+          <text class="social-emoji">📱</text>
+        </view>
+        <view class="social-btn" @click="uni.showToast({title: '苹果登录暂未开放', icon: 'none'})">
+          <text class="social-emoji">🍎</text>
+        </view>
+      </view>
+      <text class="agreement-text">登录即代表同意 <text class="link-primary">用户协议</text> 和 <text class="link-primary">隐私政策</text></text>
     </view>
   </view>
 </template>
@@ -68,9 +140,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue";
 import { useUserStore } from "@/stores/user";
-// Explicitly import components to debug uView Plus issues
-// @ts-ignore
-import UTabs from "uview-plus/components/u-tabs/u-tabs.vue";
+import { useI18n } from 'vue-i18n';
 // @ts-ignore
 import UForm from "uview-plus/components/u-form/u-form.vue";
 // @ts-ignore
@@ -78,14 +148,15 @@ import UFormItem from "uview-plus/components/u-form-item/u-form-item.vue";
 // @ts-ignore
 import UInput from "uview-plus/components/u-input/u-input.vue";
 // @ts-ignore
-import UButton from "uview-plus/components/u-button/u-button.vue";
+import UIcon from "uview-plus/components/u-icon/u-icon.vue";
+// @ts-ignore
+import ULoadingIcon from "uview-plus/components/u-loading-icon/u-loading-icon.vue";
 
 const userStore = useUserStore();
+const { t } = useI18n();
 const uForm = ref();
 const currentTab = ref(0);
 const loading = ref(false);
-
-const tabs = [{ name: "登录" }, { name: "注册" }];
 
 const form = reactive({
   email: "",
@@ -105,7 +176,6 @@ const rules = computed(() => {
       { min: 6, message: "密码长度不能少于6位", trigger: ["blur", "change"] },
     ],
   };
-
   if (currentTab.value === 1) {
     return {
       ...baseRules,
@@ -124,100 +194,215 @@ const rules = computed(() => {
       ],
     };
   }
-
   return baseRules;
 });
 
-const handleTabChange = (item: any) => {
-  currentTab.value = item.index;
-  // Reset form but keep email if desired, or full reset
-  // form.password = '';
-  // form.confirmPassword = '';
-  // form.username = '';
-  // Clear validation
+const handleTabChange = (index: number) => {
+  currentTab.value = index;
   if (uForm.value) {
     uForm.value.clearValidate();
   }
 };
 
 const handleSubmit = () => {
-  uForm.value
-    .validate()
-    .then(async () => {
-      loading.value = true;
-      try {
-        if (currentTab.value === 0) {
-          // Login
-          await userStore.login({
-            email: form.email,
-            password: form.password,
-          });
+  if (!uForm.value) return;
+  uForm.value.validate().then(async () => {
+    loading.value = true;
+    try {
+      if (currentTab.value === 0) {
+        await userStore.login({ email: form.email, password: form.password });
+        uni.switchTab({ url: "/pages/index/index" });
+      } else {
+        await userStore.register({ email: form.email, password: form.password, username: form.username });
+        uni.showToast({ title: "注册成功，正在登录...", icon: "success" });
+        setTimeout(async () => {
+          await userStore.login({ email: form.email, password: form.password });
           uni.switchTab({ url: "/pages/index/index" });
-        } else {
-          // Register
-          await userStore.register({
-            email: form.email,
-            password: form.password,
-            username: form.username,
-          });
-          uni.showToast({ title: "注册成功，请登录", icon: "success" });
-          currentTab.value = 0;
-        }
-      } catch (error: any) {
-        uni.showToast({
-          title: error.message || "操作失败",
-          icon: "none",
-        });
-      } finally {
-        loading.value = false;
+        }, 1500);
       }
-    })
-    .catch((errors: any) => {
-      console.log("Validation failed", errors);
-    });
+    } catch (error: any) {
+      uni.showToast({ title: error.message || "操作失败", icon: "none" });
+    } finally {
+      loading.value = false;
+    }
+  }).catch((errors: any) => {
+    console.log("Validation failed", errors);
+  });
 };
 </script>
 
 <style lang="scss" scoped>
-.container {
+.login-page {
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background: #FFF8F0;
+  position: relative;
+}
+
+/* 顶部弧形装饰 */
+.top-decoration {
+  position: relative;
+  padding: 60px 0 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 60px;
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 40px;
-
-  .logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 16px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .title {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
-  }
-}
-
-.auth-card {
-  width: 90%;
-  background: #fff;
-  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+.arc-bg {
+  position: absolute;
+  top: 0; left: -20%; right: -20%;
+  height: 110%;
+  background: linear-gradient(180deg, #FFF0E6 0%, #FFF8F0 100%);
+  border-radius: 0 0 50% 50%;
+}
+.top-icon {
+  position: relative; z-index: 1;
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #E8A87C, #D4A574);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 6px 20px rgba(232, 168, 124, 0.3);
+  margin-bottom: 16px;
+}
+.top-title {
+  position: relative; z-index: 1;
+  font-size: 24px; font-weight: 700;
+  color: #3D3D3D;
+  margin-bottom: 6px;
+}
+.top-subtitle {
+  position: relative; z-index: 1;
+  font-size: 14px; color: #8C8C8C;
+}
 
-  .form-content {
-    padding: 30px 20px;
+/* Tab 切换 */
+.tab-bar {
+  padding: 0 32px;
+  margin-bottom: 24px;
+}
+.tab-inner {
+  position: relative;
+  display: flex;
+  background: #F5F0EB;
+  border-radius: 24px;
+  padding: 4px;
+}
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 15px; font-weight: 500;
+  color: #8C8C8C;
+  position: relative; z-index: 1;
+  transition: color 0.3s;
+  &.active { color: #3D3D3D; font-weight: 600; }
+}
+.tab-indicator {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  width: calc(50% - 4px);
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 表单区 */
+.form-area {
+  padding: 0 32px;
+}
+.input-card {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 4px 16px;
+  margin-bottom: 14px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  &:focus-within {
+    border-color: #E8A87C;
+    box-shadow: 0 0 0 3px rgba(232, 168, 124, 0.1);
   }
 }
+.input-emoji {
+  font-size: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.form-item-inner {
+  flex: 1;
+}
+.animate-field {
+  animation: field-in 0.3s ease-out;
+}
+@keyframes field-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 提交按钮 */
+.submit-btn {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(135deg, #E8A87C, #D4A574);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 17px; font-weight: 600;
+  margin-top: 24px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(232, 168, 124, 0.35);
+  transition: all 0.2s;
+  &:active { transform: scale(0.97); opacity: 0.9; }
+  &[disabled] { background: #E0E0E0; box-shadow: none; }
+}
+
+/* 底部链接 */
+.footer-link {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 4px 0;
+  &.center { justify-content: center; }
+}
+.link-text { font-size: 13px; color: #8C8C8C; }
+.link-primary { font-size: 13px; color: #E8A87C; font-weight: 600; }
+
+/* 第三方登录 */
+.social-area {
+  position: absolute;
+  bottom: 40px; left: 0; right: 0;
+  padding: 0 32px;
+}
+.divider-row {
+  display: flex; align-items: center;
+  margin-bottom: 20px;
+}
+.divider-line { flex: 1; height: 1px; background: rgba(0,0,0,0.06); }
+.divider-text { margin: 0 16px; font-size: 12px; color: #BFBFBF; }
+
+.social-icons {
+  display: flex; justify-content: center; gap: 24px;
+  margin-bottom: 16px;
+}
+.social-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #F5F0EB;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  &:active { transform: scale(0.95); }
+}
+.social-emoji { font-size: 22px; }
+
+.agreement-text {
+  display: block;
+  text-align: center;
+  font-size: 11px; color: #BFBFBF;
+}
+
+/* uview 样式覆盖 */
+:deep(.u-form-item__body) { padding: 0 !important; }
+:deep(.u-form-item__body__right__message) { margin-left: 0 !important; }
 </style>

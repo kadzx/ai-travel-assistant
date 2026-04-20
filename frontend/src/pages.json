@@ -7,15 +7,41 @@
 	},
 	"pages": [
 		{
+			"path": "pages/lang/choose",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/welcome/welcome",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
 			"path": "pages/login/login",
 			"style": {
-				"navigationBarTitleText": "登录 / 注册"
+				"navigationBarTitleText": "登录 / 注册",
+				"navigationBarBackgroundColor": "#FFF8F0"
+			}
+		},
+		{
+			"path": "pages/login/reset-password",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "找回密码",
+				"navigationBarBackgroundColor": "#FFF8F0"
 			}
 		},
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "我的行程"
+				"navigationStyle": "custom",
+				"navigationBarTitleText": ""
 			}
 		},
 		{
@@ -27,21 +53,133 @@
 		{
 			"path": "pages/chat/chat",
 			"style": {
-				"navigationBarTitleText": "AI 助手"
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/user/profile",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "个人中心",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/post/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/post/create",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "发布笔记",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/user/edit",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "编辑资料",
+				"navigationBarBackgroundColor": "#FFF8F0"
+			}
+		},
+		{
+			"path": "pages/search/search",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "搜索",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/notification/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "通知",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/itinerary/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "我的行程",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/itinerary/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "行程详情",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/itinerary/editNode",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "编辑节点",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/user/home",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "用户主页",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/common/chooseLocation",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/settings/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
 			}
 		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "AI Travel",
-		"navigationBarBackgroundColor": "#FFFFFF",
-		"backgroundColor": "#F8F8F8"
+		"navigationBarBackgroundColor": "#FFF8F0",
+		"backgroundColor": "#FFF8F0"
 	},
 	"tabBar": {
-		"color": "#909399",
-		"selectedColor": "#3c9cff",
+		"custom": true,
+		"color": "#BFBFBF",
+		"selectedColor": "#E8A87C",
 		"backgroundColor": "#FFFFFF",
-		"borderStyle": "black",
+		"borderStyle": "white",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
@@ -54,6 +192,12 @@
 				"text": "AI 对话",
 				"iconPath": "static/tabbar/chat.png",
 				"selectedIconPath": "static/tabbar/chat-active.png"
+			},
+			{
+				"pagePath": "pages/user/profile",
+				"text": "我",
+				"iconPath": "static/tabbar/me.png",
+				"selectedIconPath": "static/tabbar/me-active.png"
 			}
 		]
 	}

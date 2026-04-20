@@ -56,6 +56,66 @@ const itineraryController = {
     }
 
     return ResponseUtil.success(res, itinerary);
+  }),
+
+  // PUT /:id
+  update: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const itinerary = await itineraryService.update(req.user.id, id, req.body || {});
+    if (!itinerary) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary not found');
+    }
+    return ResponseUtil.success(res, itinerary);
+  }),
+
+  // PATCH /:id/nodes/:nodeId
+  updateNode: asyncHandler(async (req, res) => {
+    const { id, nodeId } = req.params;
+    const itinerary = await itineraryService.updateNode(req.user.id, id, nodeId, req.body || {});
+    if (!itinerary) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary or node not found');
+    }
+    return ResponseUtil.success(res, itinerary);
+  }),
+
+  // POST /:id/nodes
+  addNode: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const itinerary = await itineraryService.addNode(req.user.id, id, req.body || {});
+    if (!itinerary) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary not found');
+    }
+    return ResponseUtil.success(res, itinerary);
+  }),
+
+  // DELETE /:id/nodes/:nodeId
+  deleteNode: asyncHandler(async (req, res) => {
+    const { id, nodeId } = req.params;
+    const itinerary = await itineraryService.deleteNode(req.user.id, id, nodeId);
+    if (!itinerary) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary or node not found');
+    }
+    return ResponseUtil.success(res, itinerary);
+  }),
+
+  // POST /:id/nodes/reorder
+  reorderNodes: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const orders = req.body?.orders;
+    const itinerary = await itineraryService.reorderNodes(req.user.id, id, orders);
+    if (!itinerary) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary not found');
+    }
+    return ResponseUtil.success(res, itinerary);
+  }),
+
+  deleteItinerary: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const result = await itineraryService.deleteItinerary(req.user.id, id);
+    if (!result) {
+      return ResponseUtil.fail(res, 'not_found', 'Itinerary not found');
+    }
+    return ResponseUtil.success(res, { message: 'Deleted successfully' });
   })
 };
 

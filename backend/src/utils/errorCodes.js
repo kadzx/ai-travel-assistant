@@ -18,7 +18,10 @@ const ErrorCodes = {
   auth_token_invalid: [4001, 'Invalid token', '无效的令牌'],
   
   // Business Specific
-  spot_not_found: [2001, 'Scenic spot not found', '景点不存在']
+  spot_not_found: [2001, 'Scenic spot not found', '景点不存在'],
+  post_not_found: [2002, 'Post not found', '帖子不存在'],
+  upload_error: [2003, 'Upload error', '上传失败'],
+  permission_denied: [4003, 'Permission denied', '无权限操作']
 };
 
 module.exports = ErrorCodes;

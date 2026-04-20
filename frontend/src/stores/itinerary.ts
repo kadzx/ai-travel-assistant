@@ -1,16 +1,39 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { request } from '@/utils/request';
+import http from '@/utils/request';
+import {
+  updateItineraryNode,
+  addItineraryNode,
+  deleteItineraryNode,
+  deleteItinerary as deleteItineraryApi,
+  reorderItineraryNodes
+} from '@/api/itinerary';
 
 export interface ItineraryItem {
   id: number | string;
-  destination: string;
-  days: number;
-  budget: number | string;
-  interests: string[];
+  title: string;
+  content?: any;
+  start_date?: string;
+  end_date?: string;
   created_at?: string;
-  content?: string;
   [key: string]: any;
+}
+
+export interface LinearNode {
+  id: string;
+  dayIndex: number;
+  sequence: number;
+  timeSlot?: string;
+  title: string;
+  location?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string;
+  transport?: string;
+  cost?: number;
+  durationMin?: number;
+  notes?: string;
+  status: 'planned' | 'done' | 'skipped';
 }
 
 export const useItineraryStore = defineStore('itinerary', () => {
@@ -21,11 +44,8 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const getList = async () => {
     loading.value = true;
     try {
-      const res: any = await request({ 
-        url: '/itinerary/list', 
-        method: 'GET' 
-      });
-      list.value = res.data || [];
+      const res: any = await http.get('/itineraries');
+      list.value = res || [];
       return list.value;
     } catch (error) {
       console.error('Fetch itinerary list error:', error);
@@ -38,18 +58,13 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const generate = async (data: any) => {
     loading.value = true;
     try {
-      const res: any = await request({ 
-        url: '/itinerary/generate', 
-        method: 'POST', 
-        data 
-      });
+      const res: any = await http.post('/itineraries/generate', data);
       
-      if (res.data) {
-        currentItinerary.value = res.data;
-        // Optionally prepend to list if it returns the full object
-        list.value.unshift(res.data);
+      if (res) {
+        currentItinerary.value = res;
+        list.value.unshift(res);
       }
-      return res.data;
+      return res;
     } catch (error) {
       console.error('Generate itinerary error:', error);
       throw error;
@@ -61,17 +76,57 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const getDetail = async (id: string | number) => {
     loading.value = true;
     try {
-      const res: any = await request({ 
-        url: `/itinerary/${id}`, 
-        method: 'GET' 
-      });
-      currentItinerary.value = res.data;
-      return res.data;
+      const res: any = await http.get(`/itineraries/${id}`);
+      currentItinerary.value = res;
+      return res;
     } catch (error) {
       console.error('Fetch itinerary detail error:', error);
       throw error;
     } finally {
       loading.value = false;
+    }
+  };
+
+  const updateNode = async (itineraryId: string | number, nodeId: string, patch: Partial<LinearNode>) => {
+    const res: any = await updateItineraryNode(itineraryId, nodeId, patch);
+    currentItinerary.value = res;
+    const idx = list.value.findIndex(item => String(item.id) === String(itineraryId));
+    if (idx >= 0) list.value[idx] = res;
+    return res;
+  };
+
+  const addNode = async (itineraryId: string | number, node: Partial<LinearNode>) => {
+    const res: any = await addItineraryNode(itineraryId, node);
+    currentItinerary.value = res;
+    const idx = list.value.findIndex(item => String(item.id) === String(itineraryId));
+    if (idx >= 0) list.value[idx] = res;
+    return res;
+  };
+
+  const deleteNode = async (itineraryId: string | number, nodeId: string) => {
+    const res: any = await deleteItineraryNode(itineraryId, nodeId);
+    currentItinerary.value = res;
+    const idx = list.value.findIndex(item => String(item.id) === String(itineraryId));
+    if (idx >= 0) list.value[idx] = res;
+    return res;
+  };
+
+  const reorderNodes = async (
+    itineraryId: string | number,
+    orders: Array<{ nodeId: string; dayIndex: number; sequence: number }>
+  ) => {
+    const res: any = await reorderItineraryNodes(itineraryId, orders);
+    currentItinerary.value = res;
+    const idx = list.value.findIndex(item => String(item.id) === String(itineraryId));
+    if (idx >= 0) list.value[idx] = res;
+    return res;
+  };
+
+  const removeItinerary = async (id: string | number) => {
+    await deleteItineraryApi(id);
+    list.value = list.value.filter(item => String(item.id) !== String(id));
+    if (currentItinerary.value && String(currentItinerary.value.id) === String(id)) {
+      currentItinerary.value = null;
     }
   };
 
@@ -81,6 +136,11 @@ export const useItineraryStore = defineStore('itinerary', () => {
     loading,
     getList, 
     generate, 
-    getDetail 
+    getDetail,
+    updateNode,
+    addNode,
+    deleteNode,
+    reorderNodes,
+    removeItinerary
   };
 });

@@ -10,9 +10,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
+const path = require('path');
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 静态图片：/uploads 对应 backend/public/uploads
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// 占位图：CDN 无法下载时返回此图，避免前端 403
+app.get('/placeholder-image.svg', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/placeholder-image.svg'));
+});
 
 // 路由
 app.use('/api', routes);
@@ -50,7 +59,38 @@ const { sequelize } = require('./src/models');
 // 启动服务器
 const startServer = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    // 使用 sync() 不 alter，避免已有表索引过多触发 MySQL 单表 64 键限制
+    await sequelize.sync();
+    // 为 posts 表补充定位字段（若已存在则忽略）
+    const addColumnIfNotExists = async (table, column, sql) => {
+      try {
+        const [cols] = await sequelize.query(`SHOW COLUMNS FROM ${table} LIKE '${column}'`);
+        if (cols.length === 0) {
+          await sequelize.query(sql);
+          console.log(`${table}.${column} 列已添加`);
+        }
+      } catch (e) {
+        console.warn(`${table}.${column} 列添加跳过:`, e.message);
+      }
+    };
+    await addColumnIfNotExists('posts', 'latitude',
+      "ALTER TABLE posts ADD COLUMN latitude DECIMAL(10,7) DEFAULT NULL COMMENT '纬度' AFTER location");
+    await addColumnIfNotExists('posts', 'longitude',
+      "ALTER TABLE posts ADD COLUMN longitude DECIMAL(10,7) DEFAULT NULL COMMENT '经度' AFTER latitude");
+    await addColumnIfNotExists('posts', 'address',
+      "ALTER TABLE posts ADD COLUMN address VARCHAR(255) DEFAULT NULL COMMENT '详细地址' AFTER longitude");
+    // 将 users.avatar 升级为 LONGTEXT 以支持 Base64 存储（已有库需执行一次）
+    try {
+      await sequelize.query(
+        "ALTER TABLE users MODIFY COLUMN avatar LONGTEXT COMMENT 'Avatar as data URL (base64) or legacy URL'"
+      );
+      console.log('users.avatar 已升级为 LONGTEXT');
+    } catch (alterErr) {
+      if (alterErr.name !== 'SequelizeDatabaseError') console.warn('avatar 列升级跳过:', alterErr.message);
+    }
+    // 为 users 表补充 preferred_lang 字段
+    await addColumnIfNotExists('users', 'preferred_lang',
+      "ALTER TABLE users ADD COLUMN preferred_lang VARCHAR(10) NOT NULL DEFAULT 'zh' COMMENT '偏好语言 (zh, en)'");
     console.log('数据库连接成功并已同步模型');
     
     app.listen(PORT, () => {

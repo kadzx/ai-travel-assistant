@@ -1,14 +1,19 @@
 import { createSSRApp } from "vue";
 import App from "./App.vue";
-import { createPinia } from 'pinia';
+import pinia from './stores';
 import uviewPlus from 'uview-plus';
+import i18n from './locale';
+import 'virtual:uno.css';
+// uview-plus 内部 UPopup 等组件会使用 up-icon，统一用 u-icon 兜底
+import UIcon from 'uview-plus/components/u-icon/u-icon.vue';
 
 export function createApp() {
   const app = createSSRApp(App);
-  const pinia = createPinia();
 
   app.use(pinia);
+  app.use(i18n);
   app.use(uviewPlus);
+  app.component('up-icon', UIcon);
 
   return {
     app,

@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const likeController = require('../controllers/likeController');
-const commentController = require('../controllers/commentController');
+const socialController = require('../controllers/socialController');
 const favoriteController = require('../controllers/favoriteController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// All social routes require authentication
-router.use(authMiddleware);
+// Like
+router.post('/like', authMiddleware, socialController.toggleLike);
 
-// --- Like Routes ---
-router.post('/like', likeController.toggleLike);
-router.get('/like/status', likeController.getLikeStatus);
+// Comment
+router.post('/comment', authMiddleware, socialController.addComment);
+router.get('/comments/:targetType/:targetId', socialController.getComments);
+router.get('/comments/:commentId/replies', socialController.getReplies);
 
-// --- Comment Routes ---
-router.post('/comment', commentController.createComment);
-router.delete('/comment/:id', commentController.deleteComment);
-router.get('/comments/:targetType/:targetId', commentController.getComments);
+// Favorite（简单开关，无文件夹）
+router.post('/favorite', authMiddleware, socialController.toggleFavorite);
 
-// --- Favorite Routes ---
-router.post('/favorite', favoriteController.toggleFavorite);
-router.get('/favorites', favoriteController.getFavorites);
-router.post('/favorite/folder', favoriteController.createFolder);
-router.get('/favorite/folders', favoriteController.getFolders);
+// Report
+router.post('/report', authMiddleware, socialController.submitReport);
+
+// 收藏夹：创建文件夹、获取列表、按文件夹获取收藏
+router.post('/favorite/folder', authMiddleware, favoriteController.createFolder);
+router.get('/favorite/folders', authMiddleware, favoriteController.getFolders);
+router.get('/favorites', authMiddleware, favoriteController.getFavorites);
 
 module.exports = router;

@@ -8,6 +8,9 @@ const Comment = require('./Comment');
 const Like = require('./Like');
 const Favorite = require('./Favorite');
 const FavoriteFolder = require('./FavoriteFolder');
+const Follow = require('./Follow');
+const Notification = require('./Notification');
+const Report = require('./Report');
 
 // 定义关联关系 / Define Associations
 
@@ -45,6 +48,17 @@ Favorite.belongsTo(FavoriteFolder, { foreignKey: 'folder_id', as: 'folder' });
 User.hasMany(Favorite, { foreignKey: 'user_id', as: 'allFavorites' });
 Favorite.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+// User <-> Follow (follower_id follows following_id)
+User.hasMany(Follow, { foreignKey: 'follower_id', as: 'followingList' });
+User.hasMany(Follow, { foreignKey: 'following_id', as: 'followerList' });
+Follow.belongsTo(User, { foreignKey: 'follower_id', as: 'follower' });
+Follow.belongsTo(User, { foreignKey: 'following_id', as: 'following' });
+
+// Notification: 接收者 / 触发者
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Notification.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
+
 // Comment Self-Association (Replies)
 Comment.hasMany(Comment, { foreignKey: 'parent_id', as: 'replies' });
 Comment.belongsTo(Comment, { foreignKey: 'parent_id', as: 'parent' });
@@ -77,6 +91,20 @@ Post.hasMany(Like, {
   as: 'likes'
 });
 
+// Post <-> Favorite
+Post.hasMany(Favorite, {
+  foreignKey: 'target_id',
+  constraints: false,
+  scope: { target_type: 'post' },
+  as: 'favorites'
+});
+
+Favorite.belongsTo(Post, {
+  foreignKey: 'target_id',
+  constraints: false,
+  as: 'post'
+});
+
 // Comment <-> Like
 Comment.hasMany(Like, { 
   foreignKey: 'target_id', 
@@ -84,6 +112,16 @@ Comment.hasMany(Like, {
   scope: { target_type: 'comment' },
   as: 'likes'
 });
+
+Like.belongsTo(Post, {
+  foreignKey: 'target_id',
+  constraints: false,
+  as: 'post'
+});
+
+// User <-> Report
+User.hasMany(Report, { foreignKey: 'user_id', as: 'reports' });
+Report.belongsTo(User, { foreignKey: 'user_id', as: 'reporter' });
 
 // 导出模型和 Sequelize 实例
 module.exports = {
@@ -96,5 +134,8 @@ module.exports = {
   Comment,
   Like,
   Favorite,
-  FavoriteFolder
+  FavoriteFolder,
+  Follow,
+  Notification,
+  Report
 };

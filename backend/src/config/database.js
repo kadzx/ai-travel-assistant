@@ -1,37 +1,22 @@
-const { Sequelize } = require('sequelize');
-const dotenv = require('dotenv');
+const { Sequelize } = require("sequelize");
+require("dotenv").config();
 
-dotenv.config();
-
-let sequelize;
-
-if (process.env.DB_DIALECT === 'mysql') {
-  sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      dialect: 'mysql',
-      logging: false, // Set to console.log to see SQL queries
-      define: {
-        timestamps: true,
-        underscored: true
-      }
-    }
-  );
-} else {
-  // Fallback to SQLite (not used now but kept for reference)
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: process.env.DB_STORAGE || './database.sqlite',
-    logging: false,
-    define: {
-      timestamps: true,
-      underscored: true
-    }
-  });
-}
+const sequelize = new Sequelize(
+  process.env.DB_NAME || "travel_db",
+  process.env.DB_USER || "root",
+  process.env.DB_PASS || process.env.DB_PASSWORD || "123456",
+  {
+    host: process.env.DB_HOST || "localhost",
+    dialect: "mysql",
+    logging: false, // Set to console.log to see SQL queries
+    timezone: "+08:00", // Asia/Shanghai timezone
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+  },
+);
 
 module.exports = sequelize;
